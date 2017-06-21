@@ -5,6 +5,7 @@ class toy_config:
         self.NUM_CLASS        = 8
         self.TRAIN_BATCH_SIZE = 100
         self.TEST_BATCH_SIZE  = 1000
+        self.ANA_BATCH_SIZE   = 0
         self.TRAIN_ITERATIONS = 1000
         self.LOGDIR           = 'logs'
 
@@ -18,10 +19,13 @@ class toy_config:
                     self.TRAIN_BATCH_SIZE = int(argv.replace('train_batch=',''))
                 elif argv.startswith('test_batch='):
                     self.TEST_BATCH_SIZE = int(argv.replace('test_batch=',''))
+                elif argv.startswith('ana_batch='):
+                    self.ANA_BATCH_SIZE = int(argv.replace('ana_batch=',''))
                 elif argv.startswith('iterations='):
                     self.TRAIN_ITERATIONS = int(argv.replace('iterations=',''))
                 elif argv.startswith('logdir='):
                     self.LOGDIR = argv
+
             except Exception:
                 print 'argument:',argv,'not in a valid format (parsing failed!)'
                 return False
@@ -32,8 +36,9 @@ class toy_config:
         msg += '    class count        = %d\n' % self.NUM_CLASS
         msg += '    batch size (train) = %d\n' % self.TRAIN_BATCH_SIZE
         msg += '    batch size (test)  = %d\n' % self.TEST_BATCH_SIZE
+        msg += '    batch size (ana)   = %d\n' % self.ANA_BATCH_SIZE
         msg += '    train iterations   = %d\n' % self.TRAIN_ITERATIONS
-        msg += '    log directory      = %s'   % self.LOGDIR
+        msg += '    log directory      = %s\n' % self.LOGDIR
         return msg
 
 if __name__ == '__main__':
