@@ -8,6 +8,8 @@ class toy_config:
         self.ANA_BATCH_SIZE   = 0
         self.TRAIN_ITERATIONS = 1000
         self.LOGDIR           = 'logs'
+        self.ARCHITECTURE     = 'lenet'
+        self.DEBUG            = 0
 
     def parse(self,argv_v):
 
@@ -24,7 +26,11 @@ class toy_config:
                 elif argv.startswith('iterations='):
                     self.TRAIN_ITERATIONS = int(argv.replace('iterations=',''))
                 elif argv.startswith('logdir='):
-                    self.LOGDIR = argv
+                    self.LOGDIR = argv.replace('logdir=','')
+                elif argv.startswith('arch='):
+                    self.ARCHITECTURE = argv.replace('arch=','')
+                elif argv.startswith('debug='):
+                    self.DEBUG = int(argv.replace('debug=',''))
 
             except Exception:
                 print 'argument:',argv,'not in a valid format (parsing failed!)'
@@ -39,6 +45,8 @@ class toy_config:
         msg += '    batch size (ana)   = %d\n' % self.ANA_BATCH_SIZE
         msg += '    train iterations   = %d\n' % self.TRAIN_ITERATIONS
         msg += '    log directory      = %s\n' % self.LOGDIR
+        msg += '    architecture       = %s\n' % self.ARCHITECTURE
+        msg += '    debug mode         = %d\n' % self.DEBUG
         return msg
 
 if __name__ == '__main__':

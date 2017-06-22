@@ -3,34 +3,17 @@ import tensorflow.python.platform
 import tensorflow as tf
 import toy_layers as L
 
-def build2(input_tensor, num_class=4):
+def build(input_tensor, num_class=4):
 
     net = input_tensor
     # 1st conv layer
-    net = L.conv2d(input_tensor=net, name='conv2_1', kernel=(3,3), stride=(1,1), num_filter=64, activation_fn=tf.nn.relu)
+    net = L.conv2d(input_tensor=net, name='conv1_1', kernel=(3,3), stride=(1,1), num_filter=64, activation_fn=tf.nn.relu)
     # max pool
     net = L.max_pool (input_tensor=net, name="pool1",   kernel=(2,2), stride=(2,2))
     # 2nd conv layer
-    net = L.conv2d(input_tensor=net, name='conv2_2', kernel=(3,3), stride=(1,1), num_filter=64, activation_fn=tf.nn.relu)
+    net = L.conv2d(input_tensor=net, name='conv2_1', kernel=(3,3), stride=(1,1), num_filter=64, activation_fn=tf.nn.relu)
     # max pool
-    net = L.max_pool (input_tensor=net, name="pool1",   kernel=(2,2), stride=(2,2))
-    return L.final_inner_product(input_tensor=net, name='fc_final', num_output=num_class)
-
-def build3(input_tensor, num_class=4):
-
-    net = input_tensor
-   # 1st conv layer                                                            
-    net = L.conv2d(input_tensor=net, name='conv3_1', kernel=(3,3), stride=(1,1), num_filter=128, activation_fn=tf.nn.relu)
-    # max pool                                                                 
-    net = L.max_pool (input_tensor=net, name="pool1",   kernel=(2,2), stride=(2,2))
-    # 2nd conv layer                                                           
-    net = L.conv2d(input_tensor=net, name='conv3_2', kernel=(3,3), stride=(1,1), num_filter=128, activation_fn=tf.nn.relu)
-    # max pool                                                                 
-    net = L.max_pool (input_tensor=net, name="pool1",   kernel=(2,2), stride=(2,2))
-    # 3rd conv layer                                                           
-    net = L.conv2d(input_tensor=net, name='conv3_3', kernel=(3,3), stride=(1,1), num_filter=128, activation_fn=tf.nn.relu)
-    # max pool                                                                 
-    net = L.max_pool (input_tensor=net, name="pool1",   kernel=(2,2), stride=(2,2))
+    net = L.max_pool (input_tensor=net, name="pool2",   kernel=(2,2), stride=(2,2))
     return L.final_inner_product(input_tensor=net, name='fc_final', num_output=num_class)
 
 # script unit test

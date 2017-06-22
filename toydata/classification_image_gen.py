@@ -138,7 +138,7 @@ def generate_noise(array, npoints):
 class image_gen_counter:
     _counter_ = 0
 
-def make_classification_images(num_images=10,debug=2,bad_label = False, multiplicities = True, noise = 0):
+def make_classification_images(num_images=10,debug=0,bad_label = False, multiplicities = True, noise = 0):
     """
     This function makes a set of variable classification images. The bad_label functionality randomizes the labels assigned
     to each image, to test training, while the debug function prints the images generated. The multiplicities corresponds
@@ -167,10 +167,6 @@ def make_classification_images(num_images=10,debug=2,bad_label = False, multipli
             _image(mat)
             plt.savefig('image_%04d.png' % image_gen_counter._counter_)
             plt.close()
-        for i in mat:
-            for j in i:
-                if not j == 0 :
-                    print j
 
         mat = np.reshape(mat, (784))
         images.append(mat)
