@@ -1,6 +1,7 @@
 class test_image:
     def __init__(self):
         self.SHAPE_SIZE = 5
+        self.PIX_VAL = 180
         self.IMSIZE = 28
         self.ALLOWED = [T, T, T, T]
         self.MULTIPLICITIES = [1, 1, 1, 1]
@@ -12,7 +13,12 @@ class test_image:
                     self.SHAPE_SIZE = arg.replace('shape_size=', '')
                 if arg.startswith('image_size='):
                     self.IMSIZE = arg.replace('image_size=','')
-
+                if arg.startswith('pixel_val='):
+                    self.PIX_VAL = arg.replace('pixel_val=','')
+                if arg.startswith('allowed_shapes='):
+                    self.ALLOWED = arg.replace('allowed_shapes=','')
+                if arg.startswith('multiplicities='):
+                    self.MULTIPLICITIES = arg.replace('multiplicities=','')
                 except Exception:
                     print 'argument:', arg, 'not in a valid format! Parsing failed :('
 
