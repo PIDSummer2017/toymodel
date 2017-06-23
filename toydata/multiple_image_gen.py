@@ -5,11 +5,14 @@ from toydatabasic import _choose_vertical
 from toydatabasic import _choose_horizontal
 from toydatabasic import _image
 from classification_image_gen import generate_noise
+from toydata_varconfig import test_image
+
+img = test_image()
 #labeling still needs to be fixed!!!!!!!!!
 
 def _choose_random_pixel(array):
-    row = np.random.randint(5, array.shape[0]-5)
-    col = np.random.randint(5, array.shape[1]-5)
+    row = np.random.randint(img.SHAPE_SIZE, array.shape[0]-img.SHAPE_SIZE)
+    col = np.random.randint(img.SHAPE_SIZE, array.shape[1]-img.SHAPE_SIZE)
     return row, col
 
 def _randomize_shape(chance):
@@ -20,7 +23,7 @@ def _randomize_shape(chance):
         return True
     else: return False
 
-def _add_multiple_shapes_to(array, locs, types = [True, True, True, True], nums = [2, 2, 2, 2], probs = 4):
+def _add_multiple_shapes_to(array, locs, types = img.ALLOWED, nums = img.MULTIPLICITIES, probs = img.PROBS):
     """
     This function populates an array with random shapes.
     The inputs are as follows:
