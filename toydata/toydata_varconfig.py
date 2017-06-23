@@ -21,6 +21,8 @@ class test_image:
                     self.MULTIPLICITIES = arg.replace('multiplicities=','')
             except Exception:
                 print 'argument:', arg, 'not in a valid format! Parsing failed :('
+=======
+                print('argument:', arg, 'not in a valid format! Parsing failed :(')
 
    # def __str__(self):
   #      msg = 'configuration parameters:\n'
