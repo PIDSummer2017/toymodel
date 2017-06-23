@@ -167,6 +167,11 @@ def make_classification_images(num_images=10,debug=0,bad_label = False, multipli
             _image(mat)
             plt.savefig('image_%04d.png' % image_gen_counter._counter_)
             plt.close()
+            
+            for _ in mat:
+                for j in _:
+                    if j != 0 and j!= 180.:
+                        print j
 
         mat = np.reshape(mat, (784))
         images.append(mat)

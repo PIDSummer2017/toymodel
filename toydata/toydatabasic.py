@@ -1,12 +1,12 @@
-impoOrt matplotlib as mpl
+import matplotlib as mpl
 mpl.use('agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import random
 from scipy import optimize
-from toydata_varconfig import toydata_varconfig
+from toydata_varconfig import test_image
 
-img = toydata_varconfig()
+img = test_image()
 
 print img
 
@@ -18,14 +18,12 @@ def _image(array):
 def _choose_triangle(x, y,array):
     if img.SHAPE_SIZE <= x <= len(array[0])-img.SHAPE_SIZE:
         if img.SHAPE_SIZE <= y <= len(array[1]) - img.SHAPE_SIZE:
+            array[x:x+img.SHAPE_SIZE, y:y+img.SHAPE_SIZE] = 0
             array[x, y] += img.PIX_VAL
-            array[x-1:x+1, y-1] += img.PIX_VAL 
-            array[x-2:x+2, y-2] += img.PIX_VAL
-            array[x-3:x, y-3] += img.PIX_VAL
-            array[x-4:x, y-4] += img.PIX_VAL
-            array[x:x+3, y-3] += img.PIX_VAL
-            array[x:x+4, y-4] += img.PIX_VAL
-
+            q = 0
+            while q <= img.SHAPE_SIZE:
+                array[x-q:x+q, y-q] += img.PIX_VAL 
+                q += 1
 
 def _choose_rectangle(x, y, array):
     if x+img.SHAPE_SIZE <= len(array[0]):
@@ -37,16 +35,18 @@ def _choose_rectangle(x, y, array):
 
 def _choose_horizontal(x, y, array):
     if y+img.SHAPE_SIZE <= len(array[1]):
-        array[x, y:y+5] += img.PIX_VAL
+        array[x:x+img.SHAPE_SIZE, y:y+img.SHAPE_SIZE] = 0
+        array[x, y:y+img.SHAPE_SIZE] += img.PIX_VAL
 
 def _choose_vertical(x, y, array):
     if x+img.SHAPE_SIZE <= len(array[0]):
-        array[x:x+5, y] += img.PIX_VAL
+        array[x:x+img.SHAPE_SIZE, y:y+img.SHAPE_SIZE] = 0
+        array[x:x+img.SHAPE_SIZE, y] += img.PIX_VAL
 
 if __name__ == '__main__':
 
     import random,sys
-    dims=(7,3) # this is data (2d array) dimension (x,y)
+    dims=(15,15) # this is data (2d array) dimension (x,y)
 
     array=np.zeros(shape=dims).astype(np.float32)
     for _ in xrange(10000):
