@@ -23,7 +23,7 @@ def _randomize_shape(chance):
         return True
     else: return False
 
-def _add_multiple_shapes_to(array, locs, types = img.ALLOWED, nums = img.MULTIPLICITIES, probs = img.PROBS):
+def _add_multiple_shapes_to(array, locs, types = img.ALLOWED, nums = img.MULTIPLICITIES, probs = 4):
     """
     This function populates an array with random shapes.
     The inputs are as follows:

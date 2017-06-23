@@ -123,6 +123,7 @@ for idx in xrange(cfg.NUM_CLASS):
 fout.write('\n')
 
 # run analysis
+from matplotlib import pyplot as plt
 batch    = make_images(cfg.ANA_BATCH_SIZE,debug=cfg.DEBUG)
 score_vv = softmax.eval(feed_dict={x: batch[0]})
 for entry,score_v in enumerate(score_vv):
@@ -132,6 +133,11 @@ for entry,score_v in enumerate(score_vv):
   for score in score_v:
     fout.write(',%g' % score)
   fout.write('\n')
+  if not label == prediction:
+    fig, ax = plt.subplots(figsize = (28,28), facecolor = 'w')
+    plt.imshow(np.reshape(batch[0][idx], (28, 28)), interpolation = 'none')
+    plt.savefig('entry%0d-%d.png' % (idx, label))
+    plt.close()
 
 fout.close()
 

@@ -1,4 +1,4 @@
-import matplotlib as mpl
+import matplotlOAib as mpl
 mpl.use('agg')
 import matplotlib.pyplot as plt
 import numpy as np
@@ -42,26 +42,3 @@ def _choose_vertical(x, y, array):
     if x+img.SHAPE_SIZE <= len(array[0]):
         array[x:x+img.SHAPE_SIZE, y:y+img.SHAPE_SIZE] = 0
         array[x:x+img.SHAPE_SIZE, y] += img.PIX_VAL
-
-if __name__ == '__main__':
-
-    import random,sys
-    dims=(15,15) # this is data (2d array) dimension (x,y)
-
-    array=np.zeros(shape=dims).astype(np.float32)
-    for _ in xrange(10000):
-        array = array.reshape(dims)
-        array[:] = 0.
-        x = int(random.random() * (dims[0]-5))
-        y = int(random.random() * dims[1])
-        _choose_vertical(x,y,array)
-        array = array.reshape(dims[0]*dims[1])
-        if not (array>0).sum() == 5:
-            print '# non-zero elements',(array>0).sum(),'(should be 5...)'
-            print array>0
-            sys.exit(1)
-        if not (array[array>0] == 180.).astype(np.int32).sum() == 5:
-            print 'Array contains element not exactly 180...'
-            eys.exit(1)
-    print 'Test successful'
-    sys.exit(0)

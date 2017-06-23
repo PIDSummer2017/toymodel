@@ -3,10 +3,10 @@ class toy_config:
 
     def __init__(self):
         self.NUM_CLASS        = 8
-        self.TRAIN_BATCH_SIZE = 100
-        self.TEST_BATCH_SIZE  = 1000
-        self.ANA_BATCH_SIZE   = 0
-        self.TRAIN_ITERATIONS = 1000
+        self.TRAIN_BATCH_SIZE = 10
+        self.TEST_BATCH_SIZE  = 100
+        self.ANA_BATCH_SIZE   = 300
+        self.TRAIN_ITERATIONS = 300
         self.LOGDIR           = 'logs'
         self.ARCHITECTURE     = 'lenet'
         self.DEBUG            = 0

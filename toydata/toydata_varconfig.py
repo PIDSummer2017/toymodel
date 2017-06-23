@@ -5,7 +5,7 @@ class test_image:
         self.IMSIZE = 28
         self.ALLOWED = [True, True, True, True]
         self.MULTIPLICITIES = [1, 1, 1, 1]
-      self.PROBS = 4
+      #self.PROBS = 4
 
     def parse(self, args):
         for arg in args:
@@ -24,9 +24,8 @@ class test_image:
                     self.PROBS = arg.replace('probs=', '')
             except Exception:
                 print 'argument:', arg, 'not in a valid format! Parsing failed :('
-=======
                 print('argument:', arg, 'not in a valid format! Parsing failed :(')
-
+            
    # def __str__(self):
   #      msg = 'configuration parameters:\n'
  #       msg += ' Shape Size = %d\n' %self.SHAPE_SIZE
