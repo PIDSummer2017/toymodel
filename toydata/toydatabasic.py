@@ -24,6 +24,8 @@ def _choose_triangle(x, y,array):
             while q <= img.SHAPE_SIZE:
                 array[x-q:x+q, y-q] += img.PIX_VAL 
                 q += 1
+            return True
+    else: return False
 
 def _choose_rectangle(x, y, array):
     if x+img.SHAPE_SIZE <= len(array[0]):
@@ -32,13 +34,19 @@ def _choose_rectangle(x, y, array):
             points = [(x, y), (x+img.SHAPE_SIZE, y), (x, y+img.SHAPE_SIZE), (x+img.SHAPE_SIZE, y+img.SHAPE_SIZE)]
             start_pt, end_pt = min(points), max(points)
             array[start_pt[1]:end_pt[1]+1, start_pt[0]:end_pt[0]+1] += img.PIX_VAL
+            return True
+    else: return False
 
 def _choose_horizontal(x, y, array):
     if y+img.SHAPE_SIZE <= len(array[1]):
         array[x:x+img.SHAPE_SIZE, y:y+img.SHAPE_SIZE] = 0
         array[x, y:y+img.SHAPE_SIZE] += img.PIX_VAL
+        return True
+    else: return False
 
 def _choose_vertical(x, y, array):
     if x+img.SHAPE_SIZE <= len(array[0]):
         array[x:x+img.SHAPE_SIZE, y:y+img.SHAPE_SIZE] = 0
         array[x:x+img.SHAPE_SIZE, y] += img.PIX_VAL
+        return True
+    else: return False
