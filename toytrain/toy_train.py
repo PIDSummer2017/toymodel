@@ -133,6 +133,7 @@ for entry,score_v in enumerate(score_vv):
   for score in score_v:
     fout.write(',%g' % score)
   fout.write('\n')
+ 
   if not label == prediction:
     fig, ax = plt.subplots(figsize = (28,28), facecolor = 'w')
     plt.imshow(np.reshape(batch[0][idx], (28, 28)), interpolation = 'none')
@@ -140,4 +141,3 @@ for entry,score_v in enumerate(score_vv):
     plt.close()
 
 fout.close()
-
