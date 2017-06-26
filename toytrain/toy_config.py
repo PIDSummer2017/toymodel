@@ -5,7 +5,7 @@ class toy_config:
         self.NUM_CLASS        = 8
         self.TRAIN_BATCH_SIZE = 10
         self.TEST_BATCH_SIZE  = 100
-        self.ANA_BATCH_SIZE   = 300
+        self.ANA_BATCH_SIZE   = 1000
         self.TRAIN_ITERATIONS = 300
         self.LOGDIR           = 'logs'
         self.ARCHITECTURE     = 'lenet'
