@@ -30,11 +30,13 @@ def _make_2d_labels(locs, nshapes = 4, maxmult = 5):
     for _ in range(nshapes):
         tester = [0,0,0,0]
         tester[_] = 1
+        mults = []
         colval = 0
         for element in locs:
             if element == tester:
                 colval += 1
-        label_array[colval][_] = 1
+        label_array[_][colval] = 1
+        mults.append(colval)
 
     return label_array
 
