@@ -55,6 +55,7 @@ net = None
 cmd = 'net=toy_%s.build(x_image,cfg.NUM_CLASS)' % cfg.ARCHITECTURE
 exec(cmd)
 
+
 #SOFTMAX
 with tf.name_scope('softmax'):
   softmax = tf.nn.softmax(logits=net)
@@ -63,16 +64,17 @@ with tf.name_scope('softmax'):
 
 yvals = [y_0, y_1, y_2, y_3]
 with tf.name_scope('cross_entropy'):
-  cross_entropy_total = 0
+  cross_entropy_total = []
   for _ in range(4):
     cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=yvals[_], logits=net))
-    cross_entropy_total += cross_entropy
-  tf.summary.scalar('cross_entropy',cross_entropy_total)
+    cross_entropy_total.append(cross_entropy)
+  totalerr = np.sum(cross_entropy_total)
+  tf.summary.scalar('cross_entropy', totalerr)
 
 #TRAINING (RMS OR ADAM-OPTIMIZER OPTIONAL)                        \
 
 with tf.name_scope('train'):
-  train_step = tf.train.RMSPropOptimizer(0.0003).minimize(cross_entropy_total)
+  train_step = tf.train.RMSPropOptimizer(0.0003).minimize(totalerr)
 
 #ACCURACY                                                         \
 

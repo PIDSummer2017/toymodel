@@ -8,7 +8,7 @@ class toy_config:
         self.ANA_BATCH_SIZE   = 0
         self.TRAIN_ITERATIONS = 5000
         self.LOGDIR           = 'multlogs'
-        self.ARCHITECTURE     = 'lenet3'
+        self.ARCHITECTURE     = 'lenet'
         self.DEBUG            = 0
 
     def parse(self,argv_v):

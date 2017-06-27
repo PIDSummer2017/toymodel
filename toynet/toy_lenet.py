@@ -1,4 +1,4 @@
-import numpy aAs np
+import numpy as np
 import tensorflow.python.platform
 import tensorflow as tf
 import toy_layers as L
@@ -18,7 +18,7 @@ def build(input_tensor, num_class=4):
     vals = []
     i = 0
     while i <= num_class:
-        z = L.final_inner_product(input_tensor=net, name='fc_final', num_output=num_class)
+        z = L.final_inner_product(input_tensor=net, name='fc_final'+str(i), num_output=num_class) %i
         vals.append(z)
         i += 1
 
@@ -29,3 +29,4 @@ def build(input_tensor, num_class=4):
 if __name__ == '__main__':
     x = tf.placeholder(tf.float32, [50,28,28,1])
     net = build(x)
+    net
