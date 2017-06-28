@@ -61,20 +61,20 @@ with tf.name_scope('softmax'):
   softmax = tf.nn.softmax(logits=net)
 
 #CROSS-ENTROPY                                                    
-#yvals = [y_0, y_1, y_2, y_3]
-#cross_entropy_total = []
-#totalerr = None
-#for idx, label in enumerate(yvals):
- # with tf.name_scope('cross_entropy%d' % idx):
-   # cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=label, logits=net[idx]))
-   # cross_entropy_total.append(cross_entropy)
-   # if totalerr is None:
-   #   totalerr = cross_entropy
-  #  else:
-   #   totalerr += cross_entropy
-  #  print cross_entropy_total
- #   print totalerr
-#    tf.summary.scalar('cross_entropy', totalerr)
+yvals = [y_0, y_1, y_2, y_3]
+cross_entropy_total = []
+totalerr = None
+for idx, label in enumerate(yvals):
+  with tf.name_scope('cross_entropy%d' % idx):
+    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=label, logits=net[idx]))
+    cross_entropy_total.append(cross_entropy)
+    if totalerr is None:
+      totalerr = cross_entropy
+    else:
+      totalerr += cross_entropy
+    print cross_entropy_total
+    print totalerr
+    tf.summary.scalar('cross_entropy', totalerr)
 
 #CROSS-ENTROPY
 #yvals = [y_0, y_1, y_2, y_3]
@@ -95,11 +95,11 @@ with tf.name_scope('softmax'):
   #  tf.summary.scalar('cross_entropy', totalerr)
 
 
-tominimize = tf.reduce_mean(totalerr)
+#tominimize = tf.reduce_mean(totalerr)
 #TRAINING (RMS OR ADAM-OPTIMIZER OPTIONAL)                        \
 
 with tf.name_scope('train'):
-  train_step = tf.train.RMSPropOptimizer(0.0003).minimize(tominimize)
+  train_step = tf.train.RMSPropOptimizer(0.0003).apply_gradientsy(totalerr)
 
 #ACCURACY                                                         \
 
