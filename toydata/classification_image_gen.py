@@ -6,6 +6,7 @@ from toydatabasic import _choose_horizontal
 from toydatabasic import _choose_vertical
 from toydatabasic import _image
 import matplotlib as mpl
+import numpy as np
 mpl.use('agg')
 
 def add_eight_shapes_to(array, locs, npoints = 1):
@@ -122,9 +123,10 @@ def randomize_labels_four():
     """ this function returns an array of length 4, where one randomly chosen element is set to 1
     and the rest are zeros. This is useful to debug the single-multiplicity four shape image generator. """
 
-    labels = [0,0,0,0]
-    z = random.randint(0, 3)
-    labels[z] = 1
+    labels=np.random.choice([0,1], size=(4,))
+    #labels = [0,0,0,0]
+   # z = random.randint(0, 3)
+   # labels[z] = 1
     return labels
 
 def generate_noise(array, npoints):
