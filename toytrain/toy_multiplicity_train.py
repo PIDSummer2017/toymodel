@@ -66,14 +66,12 @@ cross_entropy_total = []
 totalerr = None
 for idx, label in enumerate(yvals):
   with tf.name_scope('cross_entropy%d' % idx):
-    cross_entropy = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=label, logits=net[idx]))
+    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=label, logits=net[idx]))
     cross_entropy_total.append(cross_entropy)
     if totalerr is None:
       totalerr = cross_entropy
     else:
       totalerr += cross_entropy
-    print cross_entropy_total
-    print totalerr
     tf.summary.scalar('cross_entropy', totalerr)
 
 #CROSS-ENTROPY
@@ -132,26 +130,30 @@ for i in range(cfg.TRAIN_ITERATIONS):
 
     batch = make_images(cfg.TRAIN_BATCH_SIZE,debug=cfg.DEBUG)
 
-    if i%100 == 0:
+    for idx in cfg.BATCH_SIZE:
 
-        s = sess.run(merged_summary, feed_dict={x:batch[0], y_0:batch[1][0], y_1:batch[1][1], y_2:batch[1][2], y_3:batch[1][3]})
-        writer.add_summary(s,i)
+      if i%100 == 0:
 
-        train_accuracy = accuracy.eval(feed_dict={x:batch[0], y_0:batch[1][0], y_1:batch[1][1], y_2:batch[1][2], y_3:batch[1][3]})
+            s = sess.run(merged_summary, feed_dict={x:batch[idx][0], y_0:batch[idx][1][0], y_1:batch[idx][1][1], y_2:batch[idx][1][2], y_3:batch[idx][1][3]})
+            writer.add_summary(s,i)
 
-        print("step %d, training accuracy %g"%(i, train_accuracy))
+            train_accuracy = accuracy.eval(feed_dict={x:batch[idx][0], y_0:batch[idx][1][0], y_1:batch[idx][1][1], y_2:batch[idx][1][2], y_3:batch[idx][1][3]})
 
-    sess.run(train_step,feed_dict={x: batch[0], y_0: batch[1][0], y_1:batch[1][1], y_2:batch[1][2], y_3:batch[1][3]})    
+            print("step %d, training accuracy %g"%(i, train_accuracy))
+
+      sess.run(train_step,feed_dict={x: batch[idx][0], y_0: batch[idx][1][0], y_1:batch[idx][1][1], y_2:batch[idx][1][2], y_3:batch[idx][1][3]})    
 
 
-    if i%1000 ==0:
+      if i%1000 ==0:
         batchtest = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG)
-        test_accuracy = accuracy.eval(feed_dict={x:batchtest[0], y_0:batchtest[1][0], y_1:batchtest[1][1], y_2:batchtest[1][2], y_3:batchtest[1][3]})
+        test_accuracy = accuracy.eval(feed_dict={x:batchtest[idx][0], y_0:batchtest[idx][1][0], y_1:batchtest[idx][1][1], y_2:batchtest[idx][1][2], y_3:batchtest[idx][1][3]})
         print("step %d, test accuracy %g"%(i, test_accuracy))
 
 # post training test
 batch = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG)
-print("Final test accuracy %g"%accuracy.eval(feed_dict={x: batch[0], y_0: batch[1][0], y_1:batch[1][1], y_2:batch[1][2], y_3:batch[1][3]}))
+
+for idx in cfg.BATCH_SIZE:
+  print("Final test accuracy %g"%accuracy.eval(feed_dict={x: batch[idx][0], y_0: batch[idx][1][0], y_1:batch[idx][1][1], y_2:batch[idx][1][2], y_3:batch[idx][1][3]}))
 
 # inform log directory
 print('Run `tensorboard --logdir=%s` in terminal to see the result\

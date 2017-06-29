@@ -40,7 +40,18 @@ def _make_2d_labels(locs, nshapes = 4, maxmult = 5):
 
     return label_array
 
-def _add_multiple_shapes_to(array, vals, nums = img.MULTIPLICITIES, probs = 3, types = img.ALLOWED):
+def _make_type_labels(locs):
+
+    label_array = [0,0,0,0]
+    for _ in range(nshapes):
+        tester = [0,0,0,0]
+        tester[_] = 1
+        for element in locs:
+            if element = tester
+            label_array[_] = 1
+    return label_array
+
+def _add_multiple_shapes_to(array, vals, nums = img.MULTIPLICITIES, probs = 3, types = img.ALLOWED, multlabels = img.MULTLABELS):
     """
     This function populates an array with random shapes.
     The inputs are as follows:
@@ -82,8 +93,11 @@ def _add_multiple_shapes_to(array, vals, nums = img.MULTIPLICITIES, probs = 3, t
                  _choose_vertical(x, y, array)
                  if True:  
                     locs.append([0,0,0,1])
-    
-    vals.append(_make_existence_labels(locs))
+    if not multlabels:
+        vals.append(_make_type_labels(locs))
+
+    else:
+        vals.append(_make_2d_labels(locs))
 
 class image_gen_counter:
     _counter_ = 0
@@ -127,4 +141,6 @@ def generate_training_images(num_images=100,debug=0,bad_label = False, noise = 0
     #print locations
     return images, vals
 
-generate_training_images()
+if __name__ == '__main__':
+     batch = generate_training_images()
+     print np.shape(batch)

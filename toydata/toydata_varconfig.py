@@ -5,6 +5,7 @@ class test_image:
         self.IMSIZE = 28
         self.ALLOWED = [True, True, True, True]
         self.MULTIPLICITIES = [1, 1, 1, 1]
+      self.MULTLABELS = False
       #self.PROBS = 4
 
     def parse(self, args):
