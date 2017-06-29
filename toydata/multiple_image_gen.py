@@ -5,11 +5,13 @@ from toydatabasic import _choose_vertical
 from toydatabasic import _choose_horizontal
 from toydatabasic import _image
 from classification_image_gen import generate_noise
+from toydata_varconfig import test_image
+
 #labeling still needs to be fixed!!!!!!!!!
 
 def _choose_random_pixel(array):
-    row = np.random.randint(5, array.shape[0]-5)
-    col = np.random.randint(5, array.shape[1]-5)
+    row = np.random.randint(img.SHAPE_SIZE, array.shape[0]-img.SHAPE_SIZE)
+    col = np.random.randint(img.SHAPE_SIZE, array.shape[1]-img.SHAPE_SIZE)
     return row, col
 
 def _randomize_shape(chance):
@@ -20,7 +22,35 @@ def _randomize_shape(chance):
         return True
     else: return False
 
-def _add_multiple_shapes_to(array, locs, types = [True, True, True, True], nums = [2, 2, 2, 2], probs = 4):
+def _make_2d_labels(locs, nshapes = 4, maxmult = 5):
+    """This function takes in an array with labels from all the *individual* shapes in an image,
+    and generates a 2D array with shape type and multiplicities."""
+    label_array = np.zeros([nshapes, maxmult])
+    for _ in range(nshapes):
+        tester = [0,0,0,0]
+        tester[_] = 1
+        mults = []
+        colval = 0
+        for element in locs:
+            if element == tester:
+                colval += 1
+        label_array[_][colval] = 1
+        mults.append(colval)
+
+    return label_array
+
+def _make_type_labels(locs):
+
+    label_array = [0,0,0,0]
+    for _ in range(nshapes):
+        tester = [0,0,0,0]
+        tester[_] = 1
+        for element in locs:
+            if element == tester:
+                label_array[_] = 1
+    return label_array
+
+def _add_multiple_shapes_to(array, vals, nums = img.MULTIPLICITIES, probs = 3, types = img.ALLOWED, multlabels = img.MULTLABELS):
     """
     This function populates an array with random shapes.
     The inputs are as follows:
@@ -32,44 +62,51 @@ def _add_multiple_shapes_to(array, locs, types = [True, True, True, True], nums 
     ex: [2, 2, 2, 2]
     5. an integer corresponding to the likelihood of generating a shape at a
     given location: for example, an input of 4 corresponds to a 1/4 chance
-    that each allowed shape will actually exist
-    """
+    that each allowed shape will actually exist"""
+    locs = []
     if types[0]:
         for i in range(nums[0]):
             x, y = _choose_random_pixel(array)
             if _randomize_shape(probs):
                 _choose_rectangle(x, y, array)
-                locs.append([1,0,0,0])
+                if True:
+                    locs.append([1,0,0,0])
     if types[1]:
         for i in range(nums[1]):
             x, y = _choose_random_pixel(array)
             if _randomize_shape(probs):
                 _choose_triangle(x, y, array)
-                locs.append([0,1,0,0])
+                if True:
+                    locs.append([0,1,0,0])
     if types[2]:
         for i in range(nums[2]):
             x, y = _choose_random_pixel(array)
             if _randomize_shape(probs):
-                _choose_horizontal(x, y, array)
-                locs.append([0,0,1,0])
+                 _choose_horizontal(x, y, array)
+                 if True:
+                    locs.append([0,0,1,0])
     if types[3]:
         for i in range(nums[3]):
             x, y = _choose_random_pixel(array)
             if _randomize_shape(probs):
-                _choose_vertical(x, y, array)
-                locs.append([0,0,0,1])
+                 _choose_vertical(x, y, array)
+                 if True:  
+                    locs.append([0,0,0,1])
+    if not multlabels:
+        vals.append(_make_type_labels(locs))
 
+    else:
+        vals.append(_make_2d_labels(locs))
 
 class image_gen_counter:
     _counter_ = 0
 
 #@ future me: make this more elegant, less inputs, etc. use classes? work on this tomorrow
 
-def generate_training_images(num_images=100,debug=0,bad_label = False, noise = 0, 
-                             types = [True, True, True, True], nums = [2, 2, 2, 2], probs = 4):
-    locations = []
+def generate_training_images(num_images=100,debug=0,bad_label = False, noise = 0):
     bad_locations = []
     images = []
+    vals = []
 
     for i in range(num_images):
 
@@ -78,9 +115,11 @@ def generate_training_images(num_images=100,debug=0,bad_label = False, noise = 0
 
         mat = np.zeros([28,28]).astype(np.float32)
 
-        _add_multiple_shapes_to(mat, locations)
+        _add_multiple_shapes_to(mat, vals)
 
-        generate_noise(mat, noise)
+        if noise:
+
+            generate_noise(mat, noise)
 
         if debug>1:
             _image(mat)
@@ -99,6 +138,10 @@ def generate_training_images(num_images=100,debug=0,bad_label = False, noise = 0
     if bad_label:
         return images, bad_locations
     #print locations
-    return images, locations
+    vals = np.reshape(vals, (4, num_images, 5))
+    return images, vals
 
-generate_training_images()
+if __name__ == '__main__':
+    batch = generate_training_images()
+    print np.shape(batch[1])
+    print batch[1]

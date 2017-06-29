@@ -1,6 +1,7 @@
 class toy_config:
 
     def __init__(self):
+<<<<<<< HEAD
         self.NUM_CLASS        = 4
         self.TRAIN_BATCH_SIZE = 100
         self.TEST_BATCH_SIZE  = 1000
@@ -8,6 +9,15 @@ class toy_config:
         self.TRAIN_ITERATIONS = 1000
         self.LOGDIR           = 'logs'
         self.ARCHITECTURE     = 'lenet'
+=======
+        self.NUM_CLASS        = 5
+        self.TRAIN_BATCH_SIZE = 100
+        self.TEST_BATCH_SIZE  = 1000
+        self.ANA_BATCH_SIZE   = 0
+        self.TRAIN_ITERATIONS = 20000
+        self.LOGDIR           = 'multlogs'
+        self.ARCHITECTURE     = 'multi_lenet'
+>>>>>>> a2e6a288874d712d644ac6c031f7d07561306f30
         self.DEBUG            = 0
     def parse(self,argv_v):
 
