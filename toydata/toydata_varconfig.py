@@ -2,10 +2,11 @@ class test_image:
     def __init__(self):
         self.SHAPE_SIZE = 5
         self.PIX_VAL = 180
+        self.MULTLABELS = True
         self.IMSIZE = 28
         self.ALLOWED = [True, True, True, True]
         self.MULTIPLICITIES = [1, 1, 1, 1]
-      self.MULTLABELS = False
+              
       #self.PROBS = 4
 
     def parse(self, args):

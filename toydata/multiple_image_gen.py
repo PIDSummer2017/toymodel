@@ -1,4 +1,4 @@
-from toydatabasic impoOArt*
+from toydatabasic import*
 from toydatabasic import _choose_rectangle
 from toydatabasic import _choose_triangle
 from toydatabasic import _choose_vertical
@@ -46,8 +46,8 @@ def _make_type_labels(locs):
         tester = [0,0,0,0]
         tester[_] = 1
         for element in locs:
-            if element = tester
-            label_array[_] = 1
+            if element == tester:
+                label_array[_] = 1
     return label_array
 
 def _add_multiple_shapes_to(array, vals, nums = img.MULTIPLICITIES, probs = 3, types = img.ALLOWED, multlabels = img.MULTLABELS):
@@ -141,7 +141,5 @@ def generate_training_images(num_images=100,debug=0,bad_label = False, noise = 0
     return images, vals
 
 if __name__ == '__main__':
-     batch = generate_training_images()
-     print np.shape(batch)
     batch = generate_training_images()
     print np.shape(batch)
