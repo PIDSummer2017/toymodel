@@ -60,3 +60,4 @@ def final_inner_product(input_tensor, name, num_output):
         tf.summary.histogram('%s_biases' % name, biases)
 
     return tf.matmul(input_tensor,weights) + biases
+    
