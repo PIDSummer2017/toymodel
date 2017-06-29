@@ -7,7 +7,6 @@ from toydatabasic import _image
 from classification_image_gen import generate_noise
 from toydata_varconfig import test_image
 
-img = test_image()
 #labeling still needs to be fixed!!!!!!!!!
 
 def _choose_random_pixel(array):
@@ -127,4 +126,6 @@ def generate_training_images(num_images=100,debug=0,bad_label = False, noise = 0
     #print locations
     return images, vals
 
-generate_training_images()
+if __name__ == '__main__':
+    batch = generate_training_images()
+    print np.shape(batch)
