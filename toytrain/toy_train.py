@@ -38,7 +38,7 @@ sess = tf.InteractiveSession()
 
 #PLACEHOLDERS                                                                 
 x = tf.placeholder(tf.float32, [None, 784],name='x')
-y_ = tf.placeholder(tf.float32, [None, 8],name='labels')
+y_ = tf.placeholder(tf.float32, [None, 4],name='labels')
 
 #RESHAPE IMAGE IF NEED BE                                                     
 x_image = tf.reshape(x, [-1,28,28,1])
@@ -53,16 +53,16 @@ exec(cmd)
 with tf.name_scope('softmax'):
   softmax = tf.nn.softmax(logits=net)
 
-#CROSS-ENTROPY                                                                 
+#CROSS-ENTROPY                                                                
 with tf.name_scope('cross_entropy'):
   cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=net))
   tf.summary.scalar('cross_entropy',cross_entropy)
 
-#TRAINING (RMS OR ADAM-OPTIMIZER OPTIONAL)                                     
+#TRAINING (RMS OR ADAM-OPTIMIZER OPTIONAL)                                    
 with tf.name_scope('train'):
   train_step = tf.train.RMSPropOptimizer(0.0003).minimize(cross_entropy)
 
-#ACCURACY                                                                      
+#ACCURACY                                                                     
 with tf.name_scope('accuracy'):
   correct_prediction = tf.equal(tf.argmax(net,1), tf.argmax(y_,1))
   accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
@@ -72,17 +72,17 @@ saver= tf.train.Saver()
 
 sess.run(tf.global_variables_initializer())
 
-#MERGE SUMMARIES FOR TENSORBOARD                                               
+#MERGE SUMMARIES FOR TENSORBOARD                                              
 merged_summary=tf.summary.merge_all()
 
-#WRITE SUMMARIES TO LOG DIRECTORY LOGS6                                        
+#WRITE SUMMARIES TO LOG DIRECTORY LOGS6                                       
 writer=tf.summary.FileWriter(cfg.LOGDIR)
 writer.add_graph(sess.graph)
 
 #TRAINING                                                                     
 for i in range(cfg.TRAIN_ITERATIONS):
 
-    batch = make_images(cfg.TRAIN_BATCH_SIZE,debug=cfg.DEBUG)
+    batch = make_images(cfg.TRAIN_BATCH_SIZE,debug=cfg.DEBUG, multiplicities= False)
 
     if i%100 == 0:
         
@@ -134,4 +134,3 @@ for entry,score_v in enumerate(score_vv):
   fout.write('\n')
 
 fout.close()
-
