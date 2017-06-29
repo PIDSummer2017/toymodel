@@ -14,23 +14,11 @@ def build(input_tensor, num_class=8):
     net = L.conv2d(input_tensor=net, name='conv2_1', kernel=(3,3), stride=(1,1), num_filter=128, activation_fn=tf.nn.relu)
     # max pool
     net = L.avg_pool(input_tensor=net, name="pool2",   kernel=(2,2), stride=(2,2))
-    
 
-
-    vals = []
-    i = 0
-    while i <= num_class:
-        z = L.final_inner_product(input_tensor=net, name='fc_final', num_output=num_class)
-        vals.append(z)
-        i += 1
-
-    return vals
-    print vals
-
-    #for i in range(num_class):
-     # z =[L.final_inner_product(input_tensor=net, name='fc_final' + str(i), num_output=num_class)]
-      #print(z)
-      #return z  
+    for i in range(num_class):
+      z = L.final_inner_product(input_tensor=net, name='fc_final' + str(i), num_output=num_class))
+      print(z)
+    return z  
     
 # script unit test
 if __name__ == '__main__':
