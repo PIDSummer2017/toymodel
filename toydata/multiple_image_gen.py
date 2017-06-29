@@ -34,7 +34,7 @@ def _make_2d_labels(locs, nshapes = 4, maxmult = 5):
         for element in locs:
             if element == tester:
                 colval += 1
-        label_array[colval][_] = 1
+        label_array[_][colval] = 1
         mults.append(colval)
 
     return label_array
@@ -143,4 +143,5 @@ def generate_training_images(num_images=100,debug=0,bad_label = False, noise = 0
 
 if __name__ == '__main__':
     batch = generate_training_images()
-    print np.shape(batch)
+    print np.shape(batch[1])
+    print batch[1]
