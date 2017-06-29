@@ -1,8 +1,7 @@
-
 class toy_config:
 
     def __init__(self):
-        self.NUM_CLASS        = 8
+        self.NUM_CLASS        = 4
         self.TRAIN_BATCH_SIZE = 100
         self.TEST_BATCH_SIZE  = 1000
         self.ANA_BATCH_SIZE   = 0
@@ -10,7 +9,6 @@ class toy_config:
         self.LOGDIR           = 'logs'
         self.ARCHITECTURE     = 'lenet'
         self.DEBUG            = 0
-
     def parse(self,argv_v):
 
         for argv in argv_v:
