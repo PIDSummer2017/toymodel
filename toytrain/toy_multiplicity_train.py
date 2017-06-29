@@ -66,7 +66,7 @@ cross_entropy_total = []
 totalerr = None
 for idx, label in enumerate(yvals):
   with tf.name_scope('cross_entropy%d' % idx):
-    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=label, logits=net[idx]))
+    cross_entropy = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=label, logits=net[idx]))
     cross_entropy_total.append(cross_entropy)
     if totalerr is None:
       totalerr = cross_entropy
@@ -99,7 +99,7 @@ for idx, label in enumerate(yvals):
 #TRAINING (RMS OR ADAM-OPTIMIZER OPTIONAL)                        \
 
 with tf.name_scope('train'):
-  train_step = tf.train.RMSPropOptimizer(0.0003).apply_gradientsy(totalerr)
+  train_step = tf.train.RMSPropOptimizer(0.0003).minimize(totalerr)
 
 #ACCURACY                                                         \
 

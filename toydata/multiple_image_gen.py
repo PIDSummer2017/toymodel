@@ -83,7 +83,7 @@ def _add_multiple_shapes_to(array, vals, nums = img.MULTIPLICITIES, probs = 3, t
                  if True:  
                     locs.append([0,0,0,1])
     
-    vals.append(_make_2d_labels(locs))
+    vals.append(_make_existence_labels(locs))
 
 class image_gen_counter:
     _counter_ = 0
