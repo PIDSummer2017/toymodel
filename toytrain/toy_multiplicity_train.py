@@ -40,15 +40,15 @@ sess = tf.InteractiveSession()
 #PLACEHOLDERS                                                     \
 
 x = tf.placeholder(tf.float32, [None, 784],name='x')
-y_0 = tf.placeholder(tf.float32, [None, 4],name='labels0')
-y_1 = tf.placeholder(tf.float32, [None, 4], name = 'labels1')
-y_2 = tf.placeholder(tf.float32, [None, 4], name = 'labels2')
-y_3 = tf.placeholder(tf.float32, [None, 4], name = 'labels3') 
+y_0 = tf.placeholder(tf.float32, [None, 5],name='labels0')
+y_1 = tf.placeholder(tf.float32, [None, 5], name = 'labels1')
+y_2 = tf.placeholder(tf.float32, [None, 5], name = 'labels2')
+y_3 = tf.placeholder(tf.float32, [None, 5], name = 'labels3') 
 
 #RESHAPE IMAGE IF NEED BE                                         \
 
 x_image = tf.reshape(x, [-1,28,28,1])
-tf.summary.image('input',x_image,4)
+tf.summary.image('input',x_image,5)
 
 #BUILD NETWORK
 net = None
@@ -130,30 +130,26 @@ for i in range(cfg.TRAIN_ITERATIONS):
 
     batch = make_images(cfg.TRAIN_BATCH_SIZE,debug=cfg.DEBUG)
 
-    for idx in cfg.BATCH_SIZE:
+    if i%100 == 0:
 
-      if i%100 == 0:
+        s = sess.run(merged_summary, feed_dict={x:batch[0], y_0:batch[1][0], y_1:batch[1][1], y_2:batch[1][2], y_3:batch[1][3]})
+        writer.add_summary(s,i)
 
-            s = sess.run(merged_summary, feed_dict={x:batch[idx][0], y_0:batch[idx][1][0], y_1:batch[idx][1][1], y_2:batch[idx][1][2], y_3:batch[idx][1][3]})
-            writer.add_summary(s,i)
+        train_accuracy = accuracy.eval(feed_dict={x:batch[0], y_0:batch[1][0], y_1:batch[1][1], y_2:batch[1][2], y_3:batch[1][3]})
 
-            train_accuracy = accuracy.eval(feed_dict={x:batch[idx][0], y_0:batch[idx][1][0], y_1:batch[idx][1][1], y_2:batch[idx][1][2], y_3:batch[idx][1][3]})
+        print("step %d, training accuracy %g"%(i, train_accuracy))
 
-            print("step %d, training accuracy %g"%(i, train_accuracy))
-
-      sess.run(train_step,feed_dict={x: batch[idx][0], y_0: batch[idx][1][0], y_1:batch[idx][1][1], y_2:batch[idx][1][2], y_3:batch[idx][1][3]})    
+    sess.run(train_step,feed_dict={x: batch[0], y_0: batch[1][0], y_1:batch[1][1], y_2:batch[1][2], y_3:batch[1][3]})    
 
 
-      if i%1000 ==0:
+    if i%1000 ==0:
         batchtest = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG)
-        test_accuracy = accuracy.eval(feed_dict={x:batchtest[idx][0], y_0:batchtest[idx][1][0], y_1:batchtest[idx][1][1], y_2:batchtest[idx][1][2], y_3:batchtest[idx][1][3]})
+        test_accuracy = accuracy.eval(feed_dict={x:batchtest[0], y_0:batchtest[1][0], y_1:batchtest[1][1], y_2:batchtest[1][2], y_3:batchtest[1][3]})
         print("step %d, test accuracy %g"%(i, test_accuracy))
 
 # post training test
 batch = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG)
-
-for idx in cfg.BATCH_SIZE:
-  print("Final test accuracy %g"%accuracy.eval(feed_dict={x: batch[idx][0], y_0: batch[idx][1][0], y_1:batch[idx][1][1], y_2:batch[idx][1][2], y_3:batch[idx][1][3]}))
+print("Final test accuracy %g"%accuracy.eval(feed_dict={x: batch[0], y_0: batch[1][0], y_1:batch[1][1], y_2:batch[1][2], y_3:batch[1][3]}))
 
 # inform log directory
 print('Run `tensorboard --logdir=%s` in terminal to see the result\

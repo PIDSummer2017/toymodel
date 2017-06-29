@@ -25,7 +25,7 @@ def _randomize_shape(chance):
 def _make_2d_labels(locs, nshapes = 4, maxmult = 5):
     """This function takes in an array with labels from all the *individual* shapes in an image,
     and generates a 2D array with shape type and multiplicities."""
-    label_array = np.zeros([maxmult, nshapes])
+    label_array = np.zeros([nshapes, maxmult])
     for _ in range(nshapes):
         tester = [0,0,0,0]
         tester[_] = 1
@@ -34,7 +34,7 @@ def _make_2d_labels(locs, nshapes = 4, maxmult = 5):
         for element in locs:
             if element == tester:
                 colval += 1
-        label_array[_][colval] = 1
+        label_array[colval][_] = 1
         mults.append(colval)
 
     return label_array
@@ -138,6 +138,7 @@ def generate_training_images(num_images=100,debug=0,bad_label = False, noise = 0
     if bad_label:
         return images, bad_locations
     #print locations
+    vals = np.reshape(vals, (4, 100, 5))
     return images, vals
 
 if __name__ == '__main__':
