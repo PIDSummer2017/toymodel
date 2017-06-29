@@ -20,24 +20,7 @@ if os.path.isdir(cfg.LOGDIR):
 try:
   cmd = 'from toynet import toy_%s' % cfg.ARCHITECTURE
   exec(cmd)
-except Exception:
-  print 'Architecture',cfg.ARCHITECTURE,'is not available...'
-  sys.exit(1)
-
-# Print configuration
-print cfg
-
-# ready to import heavy packages
-from toynet import toy_lenet
-import numpy as np
-import tensorflow as tf
-from toydata import make_classification_images as make_images
-
-#START ACTIVE SESSION                                                         
-sess = tf.InteractiveSession()
-
-#PLACEHOLDERS                                                                 
-x = tf.placeholder(tf.float32, [None, 784],name='x')
+except Exception:784],name='x')
 y_ = tf.placeholder(tf.float32, [None, 8],name='labels')
 
 #RESHAPE IMAGE IF NEED BE                                                     
@@ -146,4 +129,3 @@ for entry,score_v in enumerate(score_vv):
   fout.write('\n')
 
 fout.close()
-
