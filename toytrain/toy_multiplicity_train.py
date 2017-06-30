@@ -32,18 +32,20 @@ from toynet import toy_lenet
 import numpy as np
 import tensorflow as tf
 from toydata import generate_training_images as make_images
-
+from toydata.toydata_varconfig import test_image
 #START ACTIVE SESSION                                             \
+
+img = test_image()
 
 sess = tf.InteractiveSession()
 
 #PLACEHOLDERS                                                     \
 
 x = tf.placeholder(tf.float32, [None, 784],name='x')
-y_0 = tf.placeholder(tf.float32, [None, 5],name='labels0')
-y_1 = tf.placeholder(tf.float32, [None, 5], name = 'labels1')
-y_2 = tf.placeholder(tf.float32, [None, 5], name = 'labels2')
-y_3 = tf.placeholder(tf.float32, [None, 5], name = 'labels3') 
+yvals = []
+
+for shape in range(img.NUM_SHAPES):
+  yvals.append(tf.placeholder(tf.float32, [None, 5],name='labels'+str(shape)))
 
 #RESHAPE IMAGE IF NEED BE                                         \
 
@@ -61,7 +63,6 @@ with tf.name_scope('softmax'):
   softmax = tf.nn.softmax(logits=net)
 
 #CROSS-ENTROPY                                                    
-yvals = [y_0, y_1, y_2, y_3]
 cross_entropy_total = []
 totalerr = None
 for idx, label in enumerate(yvals):
@@ -79,37 +80,62 @@ for idx, label in enumerate(yvals):
 #cross_entropy_total = []
 #totalerr = None
 #for idx, label in enumerate(yvals):
-  #with tf.name_scope('cross_entropy%d' % idx):
+ # with tf.name_scope('cross_entropy%d' % idx):
    # cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=label, logits=net[idx])
    # cross_entropy_total.append(cross_entropy)
    # c = np.sum(cross_entropy)
    # print cross_entropy
    # if totalerr is None:
-   #   totalerr = c
-  #  else:
-    #  totalerr += c
+    #  totalerr = c
+   # else:
+   #   totalerr += c
    # print cross_entropy_total
    # print totalerr
-  #  tf.summary.scalar('cross_entropy', totalerr)
+   # tf.summary.scalar('cross_entropy', totalerr)
 
 
-#tominimize = tf.reduce_mean(totalerr)
+tominimize = tf.reduce_mean(totalerr)
 #TRAINING (RMS OR ADAM-OPTIMIZER OPTIONAL)                        \
 
 with tf.name_scope('train'):
-  train_step = tf.train.RMSPropOptimizer(0.0003).minimize(totalerr)
+  train_step = tf.train.RMSPropOptimizer(0.0003).minimize(tominimize)
 
-#ACCURACY                                                         \
+#ACCURACY                        
 
-with tf.name_scope('accuracy'):
-  cp0 = tf.equal(tf.argmax(net[0],1), tf.argmax(y_0,1))
-  cp1 = tf.equal(tf.argmax(net[1], 1), tf.argmax(y_1, 1))
-  cp2 = tf.equal(tf.argmax(net[2], 1), tf.argmax(y_2, 1))
-  cp3 = tf.equal(tf.argmax(net[3], 1), tf.argmax(y_3, 1))
-  correct_prediction = [cp0, cp1, cp2, cp3]
-  accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+correct_prediction = []                                 
 
-tf.summary.scalar('accuracy', accuracy)
+with tf.name_scope('totalaccuracy'):
+
+    for q in range(img.NUM_SHAPES):
+        correct_prediction.append(tf.equal(tf.argmax(net[0],1), tf.argmax(yvals[q],1)))
+
+totalaccuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+tf.summary.scalar('total accuracy',totalaccuracy)
+
+with tf.name_scope('square_accuracy'):
+
+  square_accuracy = tf.reduce_mean(tf.cast(correct_prediction[0], tf.float32))
+
+  tf.summary.scalar('square_accuracy', square_accuracy)
+
+with tf.name_scope('tri_accuracy'):
+
+  tri_accuracy = tf.reduce_mean(tf.cast(correct_prediction[1], tf.float32))
+
+  tf.summary.scalar('tri_accuracy', tri_accuracy)
+
+with tf.name_scope('horizontal_accuracy'):
+
+  horizontal_accuracy = tf.reduce_mean(tf.cast(correct_prediction[2], tf.float32))
+
+  tf.summary.scalar('horizontal_accuracy', horizontal_accuracy)
+
+with tf.name_scope('vertical_accuracy'):
+  
+  vertical_accuracy = tf.reduce_mean(tf.cast(correct_prediction[3], tf.float32))
+
+  tf.summary.scalar('vertical_accuracy', vertical_accuracy)
 
 saver= tf.train.Saver()
 
@@ -132,24 +158,31 @@ for i in range(cfg.TRAIN_ITERATIONS):
 
     if i%100 == 0:
 
-        s = sess.run(merged_summary, feed_dict={x:batch[0], y_0:batch[1][0], y_1:batch[1][1], y_2:batch[1][2], y_3:batch[1][3]})
+        s = sess.run(merged_summary, feed_dict={x:batch[0], yvals[0]:batch[1][0], yvals[1]:batch[1][1], yvals[2]:batch[1][2], yvals[3]:batch[1][3]})
         writer.add_summary(s,i)
 
-        train_accuracy = accuracy.eval(feed_dict={x:batch[0], y_0:batch[1][0], y_1:batch[1][1], y_2:batch[1][2], y_3:batch[1][3]})
+        train_accuracy = totalaccuracy.eval(feed_dict={x:batch[0], yvals[0]:batch[1][0], yvals[1]:batch[1][1], yvals[2]:batch[1][2], yvals[3]:batch[1][3]})
+        train_shape_accuracy0 = square_accuracy.eval(feed_dict={x:batch[0], yvals[0]:batch[1][0], yvals[1]:batch[1][1], yvals[2]:batch[1][2], yvals[3]:batch[1][3]})
+        train_shape_accuracy1 = tri_accuracy.eval(feed_dict={x:batch[0], yvals[0]:batch[1][0], yvals[1]:batch[1][1], yvals[2]:batch[1][2], yvals[3]:batch[1][3]})
+        train_shape_accuracy2 = vertical_accuracy.eval(feed_dict={x:batch[0], yvals[0]:batch[1][0], yvals[1]:batch[1][1], yvals[2]:batch[1][2], yvals[3]:batch[1][3]})
+        train_shape_accuracy3 = horizontal_accuracy.eval(feed_dict={x:batch[0], yvals[0]:batch[1][0], yvals[1]:batch[1][1], yvals[2]:batch[1][2], yvals[3]:batch[1][3]})
+        print("step %d, training accuracy %g, %g, %g, %g, %g"%(i, train_accuracy, train_shape_accuracy0, train_shape_accuracy1, train_shape_accuracy2, train_shape_accuracy3))
 
-        print("step %d, training accuracy %g"%(i, train_accuracy))
-
-    sess.run(train_step,feed_dict={x: batch[0], y_0: batch[1][0], y_1:batch[1][1], y_2:batch[1][2], y_3:batch[1][3]})    
+    sess.run(train_step,feed_dict={x: batch[0], yvals[0]: batch[1][0], yvals[1]:batch[1][1], yvals[2]:batch[1][2], yvals[3]:batch[1][3]})    
 
 
     if i%1000 ==0:
         batchtest = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG)
-        test_accuracy = accuracy.eval(feed_dict={x:batchtest[0], y_0:batchtest[1][0], y_1:batchtest[1][1], y_2:batchtest[1][2], y_3:batchtest[1][3]})
-        print("step %d, test accuracy %g"%(i, test_accuracy))
+        test_accuracy = totalaccuracy.eval(feed_dict={x:batchtest[0], yvals[0]:batchtest[1][0], yvals[1]:batchtest[1][1], yvals[2]:batchtest[1][2], yvals[3]:batchtest[1][3]})
+        test_shape_accuracy0 = square_accuracy.eval(feed_dict={x:batchtest[0], yvals[0]:batchtest[1][0], yvals[1]:batchtest[1][1], yvals[2]:batchtest[1][2], yvals[3]:batchtest[1][3]})
+        test_shape_accuracy1 = tri_accuracy.eval(feed_dict={x:batchtest[0], yvals[0]:batchtest[1][0], yvals[1]:batchtest[1][1], yvals[2]:batchtest[1][2], yvals[3]:batchtest[1][3]})
+        test_shape_accuracy2 = vertical_accuracy.eval(feed_dict={x:batchtest[0], yvals[0]:batchtest[1][0], yvals[1]:batchtest[1][1], yvals[2]:batchtest[1][2], yvals[3]:batchtest[1][3]})
+        test_shape_accuracy3 = horizontal_accuracy.eval(feed_dict={x:batchtest[0], yvals[0]:batchtest[1][0], yvals[1]:batchtest[1][1], yvals[2]:batchtest[1][2], yvals[3]:batchtest[1][3]})
+        print("step %d, training accuracy %g, %g, %g, %g, %g"%(i, test_accuracy, test_shape_accuracy0, test_shape_accuracy1, test_shape_accuracy2, test_shape_accuracy3))
 
 # post training test
 batch = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG)
-print("Final test accuracy %g"%accuracy.eval(feed_dict={x: batch[0], y_0: batch[1][0], y_1:batch[1][1], y_2:batch[1][2], y_3:batch[1][3]}))
+print("Final test accuracy %g"%totalaccuracy.eval(feed_dict={x: batch[0], yvals[0]: batch[1][0], yvals[1]:batch[1][1], yvals[2]:batch[1][2], yvals[3]:batch[1][3]}))
 
 # inform log directory
 print('Run `tensorboard --logdir=%s` in terminal to see the result\

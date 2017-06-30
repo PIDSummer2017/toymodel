@@ -5,7 +5,9 @@ from toydatabasic import _choose_vertical
 from toydatabasic import _choose_horizontal
 from toydatabasic import _image
 from classification_image_gen import generate_noise
+from classification_image_gen import randomize_labels_four
 from toydata_varconfig import test_image
+from numpy import random
 
 #labeling still needs to be fixed!!!!!!!!!
 
@@ -39,7 +41,7 @@ def _make_2d_labels(locs, nshapes = 4, maxmult = 5):
 
     return label_array
 
-def _make_type_labels(locs):
+def _make_type_labels(locs, nshapes = img.NUM_SHAPES):
 
     label_array = [0,0,0,0]
     for _ in range(nshapes):
@@ -49,6 +51,16 @@ def _make_type_labels(locs):
             if element == tester:
                 label_array[_] = 1
     return label_array
+    
+
+def _randomize_type_labels():
+    label_array = [0,0,0,0]
+    z = random.randint(0, 5)
+    for i in range(z):
+        q = random.randint(0, 3)
+        label_array[q] = 1
+    return label_array
+
 
 def _add_multiple_shapes_to(array, vals, nums = img.MULTIPLICITIES, probs = 3, types = img.ALLOWED, multlabels = img.MULTLABELS):
     """
@@ -103,7 +115,7 @@ class image_gen_counter:
 
 #@ future me: make this more elegant, less inputs, etc. use classes? work on this tomorrow
 
-def generate_training_images(num_images=100,debug=0,bad_label = False, noise = 0):
+def generate_training_images(num_images=100,debug=0,bad_label = False, noise = 0, multlabels = img.MULTLABELS):
     bad_locations = []
     images = []
     vals = []
@@ -132,9 +144,13 @@ def generate_training_images(num_images=100,debug=0,bad_label = False, noise = 0
         image_gen_counter._counter_ +=1
 
     if bad_label:
-        for loc in locations:
-            bad_locations.append(randomize_labels())
-
+        for loc in vals:
+            if multlabels:
+                bad_locations.append(randomize_labels_four())
+            if not multlabels:
+                bad_locations.append(_randomize_type_labels())
+                          
+ 
     if bad_label:
         return images, bad_locations
     #print locations
@@ -142,6 +158,6 @@ def generate_training_images(num_images=100,debug=0,bad_label = False, noise = 0
     return images, vals
 
 if __name__ == '__main__':
-    batch = generate_training_images()
+    batch = generate_training_images(bad_label = True, num_images = 200)
     print np.shape(batch[1])
     print batch[1]

@@ -2,8 +2,9 @@ class test_image:
     def __init__(self):
         self.SHAPE_SIZE = 5
         self.PIX_VAL = 180
-        self.MULTLABELS = True
+        self.MULTLABELS = False
         self.IMSIZE = 28
+        self.NUM_SHAPES = 4
         self.ALLOWED = [True, True, True, True]
         self.MULTIPLICITIES = [1, 1, 1, 1]
               
