@@ -31,7 +31,7 @@ print cfg
 from toynet import toy_lenet
 import numpy as np
 import tensorflow as tf
-from toydata import make_classification_images as make_images
+from toydata import generate_training_images as make_images
 
 #START ACTIVE SESSION                                                      
 sess = tf.InteractiveSession()
@@ -51,9 +51,9 @@ net = None
 cmd = 'net=toy_%s.build(x_image,cfg.NUM_CLASS)' % cfg.ARCHITECTURE
 exec(cmd)
 
-#SOFTMAX
+#SIGMOID
 with tf.name_scope('softmax'):
-  softmax = tf.nn.softmax(logits=net)
+  softmax = tf.nn.sigmoid(net)
 
 #CROSS-ENTROPY                                                                
 with tf.name_scope('cross_entropy'):
@@ -84,7 +84,7 @@ writer.add_graph(sess.graph)
 #TRAINING                                                                  
 for i in range(cfg.TRAIN_ITERATIONS):
 
-    batch = make_images(cfg.TRAIN_BATCH_SIZE,debug=cfg.DEBUG, multiplicities=False)
+    batch = make_images(cfg.TRAIN_BATCH_SIZE,debug=cfg.DEBUG, bad_label=False)
     #print(batch[1])
     #print(batch)
     if i%100 == 0:
@@ -99,12 +99,12 @@ for i in range(cfg.TRAIN_ITERATIONS):
     sess.run(train_step,feed_dict={x: batch[0], y_: batch[1]})                                    
 
     if i%1000 ==0:
-        batchtest = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG, multiplicities=False)
+        batchtest = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG, bad_label=False)
         test_accuracy = accuracy.eval(feed_dict={x:batchtest[0], y_:batchtest[1]})
         print("step %d, test accuracy %g"%(i, test_accuracy))
 
 # post training test
-batch = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG, multiplicities=False)
+batch = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG, bad_label=False)
 print("Final test accuracy %g"%accuracy.eval(feed_dict={x: batch[0], y_: batch[1]}))
 
 
@@ -131,7 +131,7 @@ for idx in xrange(cfg.NUM_CLASS):
 fout.write('\n')
 
 # run analysis
-batch    = make_images(cfg.ANA_BATCH_SIZE,debug=cfg.DEBUG, multiplicities=False)
+batch    = make_images(cfg.ANA_BATCH_SIZE,debug=cfg.DEBUG,bad_label=False)
 score_vv = softmax.eval(feed_dict={x: batch[0]})
 for entry,score_v in enumerate(score_vv):
   label = int(np.argmax(batch[1][entry]))
