@@ -40,8 +40,6 @@ sess = tf.InteractiveSession()
 x = tf.placeholder(tf.float32, [None, 784],name='x')
 y_ = tf.placeholder(tf.float32, [None, 4],name='labels')
 
-#print(x)
-#print(y_)
 #RESHAPE IMAGE IF NEED BE                                                     
 x_image = tf.reshape(x, [-1,28,28,1])
 tf.summary.image('input',x_image,10)
