@@ -6,3 +6,5 @@ Take a look at lenet.py as an example.
 """
 import toy_lenet
 import toy_lenet3
+#import toy_multi_lenet
+
