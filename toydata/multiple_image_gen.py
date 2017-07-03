@@ -1,9 +1,10 @@
-from toydatabasic import*
+from toydatabasic import *
 from toydatabasic import _choose_rectangle
 from toydatabasic import _choose_triangle
 from toydatabasic import _choose_vertical
 from toydatabasic import _choose_horizontal
 from toydatabasic import _image
+from toydata_varconfig import gen_config
 from classification_image_gen import generate_noise
 from classification_image_gen import randomize_labels_four
 from numpy import random
@@ -61,7 +62,9 @@ def _randomize_type_labels():
     return label_array
 
 
-def _add_multiple_shapes_to(array, vals, nums = img.MULTIPLICITIES, probs = 3, types = img.ALLOWED, multlabels = img.MULTLABELS):
+def _add_multiple_shapes_to(array, vals, nums = img.MULTIPLICITIES, probs = 3, types = img.ALLOWED, multlabels = None):
+    if multlabels is None:
+        multlabels = gen_config.get_shared().MULTLABELS
     """
     This function populates an array with random shapes.
     The inputs are as follows:
@@ -114,7 +117,10 @@ class image_gen_counter:
 
 #@ future me: make this more elegant, less inputs, etc. use classes? work on this tomorrow
 
-def generate_training_images(num_images=1000,debug=0,bad_label = False, noise = 0, multlabels = img.MULTLABELS):
+def generate_training_images(num_images=1000,debug=0,bad_label = False, noise = 0, multlabels = None):
+    if multlabels is None:
+        multlabels = gen_config.get_shared().MULTLABELS
+
     bad_locations = []
     images = []
     vals = []

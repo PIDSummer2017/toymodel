@@ -8,8 +8,6 @@ from toydata_varconfig import gen_config
 
 img = gen_config.get_shared()
 
-print img
-
 def _image(array):
     fig,ax = plt.subplots(figsize=(img.IMSIZE, img.IMSIZE),facecolor='w')
     plt.imshow(array,interpolation = 'nearest')

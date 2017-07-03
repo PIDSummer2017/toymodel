@@ -30,12 +30,14 @@ print cfg
 # ready to import heavy packages
 from toynet import toy_lenet
 from toydata import gen_config
+# Impose the multilabel condition in gen_configto resepct the user config
+gen_config.get_shared().MULTLABELS = cfg.MULTI_LABEL
+
+print '\033[93mHERE\033[00m',gen_config.get_shared().MULTLABELS
+
 import numpy as np
 import tensorflow as tf
 from toydata import generate_training_images as make_images
-
-# Impose the multilabel condition in gen_configto resepct the user config
-#gen_config.MULTLABELS = cfg.MULTI_LABEL
 
 #START ACTIVE SESSION                                                      
 sess = tf.InteractiveSession()
