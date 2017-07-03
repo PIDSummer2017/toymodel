@@ -12,9 +12,21 @@ if not cfg.parse(sys.argv):
 
 # Check if log directory already exists
 if os.path.isdir(cfg.LOGDIR):
-  print '[ERROR] Log directory already present:',cfg.LOGDIR
-  print 'Exiting...'
-  sys.exit(1)
+  print '[WARNING] Log directory already present:',cfg.LOGDIR
+  user_input=None
+  while user_input is None:
+    sys.stdout.write('Remove and proceed? [y/n]:')
+    sys.stdout.flush()
+    user_input = sys.stdin.readline().rstrip('\n')
+    if not user_input.lower() in ['y','n','yes','no']:
+      print 'Unsupported answer:',user_input
+      user_input=None
+      continue
+  if user_input in ['n','no']:
+    print 'Exiting...'
+    sys.exit(1)
+  else:
+    os.system('rm -rf %s' % cfg.LOGDIR)
 
 # Check if chosen network is available
 try:
