@@ -8,18 +8,17 @@ class toy_config:
         self.ANA_BATCH_SIZE   = 1000
         self.TRAIN_ITERATIONS = 1000
         self.LOGDIR           = 'logs'
-        self.ARCHITECTURE     = 'lenet5'
         self.BAD_LABEL        = 'False'
-       # self.NUM_CLASS        = 4
-        #self.TRAIN_BATCH_SIZE = 10
-        #self.TEST_BATCH_SIZE  = 100
-        #self.ANA_BATCH_SIZE   = 0
-        #self.TRAIN_ITERATIONS = 20000
-        #self.LOGDIR           = 'multlogs'
-        #self.ARCHITECTURE     = 'multi_lenet'
+        self.ARCHITECTURE     = 'lenet'
         self.DEBUG            = 0
 
     def parse(self,argv_v):
+
+        cfg_file=None
+        for argv in argv_v:
+            if argv.endswith('.cfg'):
+                params=open(argv,'r').read().split()
+                return self.parse(params)
 
         for argv in argv_v:
             try:
@@ -39,6 +38,8 @@ class toy_config:
                     self.ARCHITECTURE = argv.replace('arch=','')
                 elif argv.startswith('debug='):
                     self.DEBUG = int(argv.replace('debug=',''))
+                elif argv.startswith('bad_label='):
+                    self.BAD_LABEL = int(argv.replace('bad_label=',''))
 
             except Exception:
                 print 'argument:',argv,'not in a valid format (parsing failed!)'
@@ -55,6 +56,7 @@ class toy_config:
         msg += '    log directory      = %s\n' % self.LOGDIR
         msg += '    architecture       = %s\n' % self.ARCHITECTURE
         msg += '    debug mode         = %d\n' % self.DEBUG
+        msg += '    bad label          = %d\n' % self.BAD_LABEL
         return msg
 
 if __name__ == '__main__':
