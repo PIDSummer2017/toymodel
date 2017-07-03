@@ -154,7 +154,9 @@ def generate_training_images(num_images=100,debug=0,bad_label = False, noise = 0
     if bad_label:
         return images, bad_locations
     #print locations
-    vals = np.reshape(vals, (4, num_images, 5))
+
+    if multlabels:
+        vals = np.reshape(vals, (4, num_images, 5))
     return images, vals
 
 if __name__ == '__main__':

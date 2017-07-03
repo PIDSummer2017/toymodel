@@ -36,17 +36,26 @@ def two_shape_imgs(f):
     df = pd.read_csv(f)
     print "Network Labels: " + str(df.describe())
     label_array = [0,0,0,0]
-    for shape in range(3):
-        for othershape in range(3):
+    for shape in range(4):
+        for othershape in range(4):
             if shape != othershape:
-                twoshape_df = df[(df['label' + str(shape)] == 1)&(df['label' + str(othershape)] == 1)]
-                print str(shape) + ' ' + str(othershape) + ' summary:' + str(combined_df.describe())
-                print str(shape) + ' ' + str(othershape) + ' errors:' + str(error_twoshape.describe())
-                plt.hist(twoshape_df['score'+str(shape)], norm = LogNorm())
-                plt.colorbar
+                rmme0 = 'label' + str(shape)
+                rmme1 = 'label' + str(othershape)
+                print rmme0,rmme1
+                print df.describe()
+                print type(df.label0)
+                print type(df.label1)
+                print type(df[rmme0])
+                print type(df[rmme1])
+                print type((df['label' + str(shape)] == 1) & (df['label' + str(othershape)] == 1))
+                twoshape_df = df[(df['label' + str(shape)] == 1) & (df['label' + str(othershape)] == 1)]
+ #               print str(shape) + ' ' + str(othershape) + ' summary:' + str(combined_df.describe())
+#                print str(shape) + ' ' + str(othershape) + ' errors:' + str(error_twoshape.describe())
+                H, xedges = np.histogram(twoshape_df['score0'+str(shape)])
+                plt.plot(H)
                 plt.title('Sigmoid Training Labels for ' + str(shape) + str(othershape) + ' images')
                 plt.xlabel('Image Label')
                 plt.ylabel('Network Prediction')
-                plt.savefig('errs_%d.png') % (str(shape) + str(othershape))
+                plt.savefig(str(shape)+str(othershape)+'.png')
 
-two_shape_imgs('sigmoid_ana.csv')
+two_shape_imgs('sigmoidanalysis.csv')
