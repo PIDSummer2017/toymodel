@@ -67,12 +67,6 @@ with tf.name_scope('train'):
 
 #ACCURACY                                                                     
 with tf.name_scope('accuracy'):
- # netaccuracy = []
- # for i in tf.unstack(net):
- #   netaccuracy.append(int(i+0.5))
- # y_accuracy = []
- # for i in tf.unstack(y_):
- #   y_accuracy.append(int(i+0.5))
   correct_prediction = tf.equal(tf.rint(net), tf.rint(y_))
   accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
   tf.summary.scalar('accuracy', accuracy)
