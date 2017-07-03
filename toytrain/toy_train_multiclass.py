@@ -141,7 +141,7 @@ fout.write('\n')
 
 # run ana
 batch    = make_images(cfg.ANA_BATCH_SIZE,debug=cfg.DEBUG,bad_label=False)
-score_vv = softmax.eval(feed_dict={x: batch[0]})
+score_vv = sigmoid.eval(feed_dict={x: batch[0]})
 for entry,score_v in enumerate(score_vv):
   label0 = batch[1][entry][0]
   label1 = batch[1][entry][1]
