@@ -50,8 +50,8 @@ cmd = 'net=toy_%s.build(x_image,cfg.NUM_CLASS)' % cfg.ARCHITECTURE
 exec(cmd)
 
 #SIGMOID
-with tf.name_scope('softmax'):
-  softmax = tf.nn.sigmoid(net)
+with tf.name_scope('sigmoid'):
+  sigmoid = tf.nn.sigmoid(net)
 
 #CROSS-ENTROPY                                                                
 with tf.name_scope('cross_entropy'):
@@ -106,9 +106,9 @@ batch = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG, bad_label=False)
 print("Final test accuracy %g"%accuracy.eval(feed_dict={x: batch[0], y_: batch[1]}))
 
 
-prediction=tf.argmax(net,1)
-print "Predictions", prediction.eval(feed_dict={x:batch[0]}, session=sess)
-print "Correct Predictions", correct_prediction.eval({x:batch[0], y_:batch[1]}, session=sess)
+#prediction=tf.argmax(net,1)
+#print "Predictions", prediction.eval(feed_dict={x:batch[0]}, session=sess)
+#print "Correct Predictions", correct_prediction.eval({x:batch[0], y_:batch[1]}, session=sess)
 
 # inform log directory
 print('Run `tensorboard --logdir=%s` in terminal to see the results.' % cfg.LOGDIR)
@@ -130,7 +130,7 @@ fout.write('\n')
 
 # run analysis
 batch    = make_images(cfg.ANA_BATCH_SIZE,debug=cfg.DEBUG,bad_label=False)
-score_vv = softmax.eval(feed_dict={x: batch[0]})
+score_vv = sigmoid.eval(feed_dict={x: batch[0]})
 for entry,score_v in enumerate(score_vv):
   label = int(np.argmax(batch[1][entry]))
   prediction = int(np.argmax(score_v))
