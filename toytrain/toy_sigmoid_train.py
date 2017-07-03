@@ -145,9 +145,9 @@ for entry,score_v in enumerate(score_vv):
   #prediction1 = score_v[1]
   #prediction2 = score_v[2]
  # prediction3 = score_v[3]
+  fout.write('%d, %d, %d, %d, %d' % (entry, label0, label1, label2, label3))
   for score in score_v:
     fout.write(',%g' % score)
-  fout.write('%d, %d, %d, %d, %d' % (entry, label0, label1, label2, label3))
   fout.write('\n')
 
 fout.close()

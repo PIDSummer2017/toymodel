@@ -10,6 +10,7 @@ class toy_config:
         self.LOGDIR           = 'logs'
         self.ARCHITECTURE     = 'lenet'
         self.BAD_LABEL        = False
+        self.MULTI_LABEL      = False
         self.DEBUG            = 0
 
     def parse(self,argv_v):
@@ -40,6 +41,8 @@ class toy_config:
                     self.DEBUG = int(argv.replace('debug=',''))
                 elif argv.startswith('bad_label='):
                     self.BAD_LABEL = int(argv.replace('bad_label=',''))
+                elif argv.startswith('multi_label='):
+                    self.MULTI_LABEL = int(argv.replace('multi_label=',''))
 
             except Exception:
                 print 'argument:',argv,'not in a valid format (parsing failed!)'
@@ -57,6 +60,7 @@ class toy_config:
         msg += '    architecture       = %s\n' % self.ARCHITECTURE
         msg += '    debug mode         = %d\n' % self.DEBUG
         msg += '    bad label          = %d\n' % self.BAD_LABEL
+        msg += '    multi label        = %d\n' % self.MULTI_LABEL
         return msg
 
 if __name__ == '__main__':

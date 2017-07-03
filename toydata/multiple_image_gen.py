@@ -6,7 +6,6 @@ from toydatabasic import _choose_horizontal
 from toydatabasic import _image
 from classification_image_gen import generate_noise
 from classification_image_gen import randomize_labels_four
-from toydata_varconfig import test_image
 from numpy import random
 
 #labeling still needs to be fixed!!!!!!!!!

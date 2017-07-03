@@ -4,3 +4,4 @@ if you are just a user. Developers? figure it out.
 """
 from classification_image_gen import make_classification_images
 from multiple_image_gen import generate_training_images
+from toydata_varconfig import gen_config

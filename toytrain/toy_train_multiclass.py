@@ -29,9 +29,13 @@ print cfg
 
 # ready to import heavy packages
 from toynet import toy_lenet
+from toydata import gen_config
 import numpy as np
 import tensorflow as tf
 from toydata import generate_training_images as make_images
+
+# Impose the multilabel condition in gen_configto resepct the user config
+#gen_config.MULTLABELS = cfg.MULTI_LABEL
 
 #START ACTIVE SESSION                                                      
 sess = tf.InteractiveSession()
@@ -63,8 +67,13 @@ with tf.name_scope('train'):
   train_step = tf.train.RMSPropOptimizer(0.0003).minimize(cross_entropy)
 
 #ACCURACY                                                                     
+#with tf.name_scope('accuracy'):
+#  correct_prediction = tf.equal(tf.argmax(net,1), tf.argmax(y_,1))
+#  accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+#  tf.summary.scalar('accuracy', accuracy)
+#ACCURACY
 with tf.name_scope('accuracy'):
-  correct_prediction = tf.equal(tf.argmax(net,1), tf.argmax(y_,1))
+  correct_prediction = tf.equal(tf.rint(sigmoid), tf.rint(y_))
   accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
   tf.summary.scalar('accuracy', accuracy)
 
@@ -123,18 +132,24 @@ if not cfg.ANA_BATCH_SIZE:
 
 # prepare analysis output csv
 fout = open('%s/analysis.csv' % cfg.LOGDIR,'w')
-fout.write('entry,label,prediction')
+fout.write('entry,label0, label1, label2, label3')
 for idx in xrange(cfg.NUM_CLASS):
   fout.write(',score%02d' % idx)
 fout.write('\n')
 
-# run analysis
+# run ana
 batch    = make_images(cfg.ANA_BATCH_SIZE,debug=cfg.DEBUG,bad_label=False)
-score_vv = sigmoid.eval(feed_dict={x: batch[0]})
+score_vv = softmax.eval(feed_dict={x: batch[0]})
 for entry,score_v in enumerate(score_vv):
-  label = int(np.argmax(batch[1][entry]))
-  prediction = int(np.argmax(score_v))
-  fout.write('%d,%d,%d' % (entry, label, prediction))
+  label0 = batch[1][entry][0]
+  label1 = batch[1][entry][1]
+  label2 = batch[1][entry][2]
+  label3 = batch[1][entry][3]
+  #prediction0 = score_v[0]
+  #prediction1 = score_v[1]
+  #prediction2 = score_v[2]
+ # prediction3 = score_v[3]
+  fout.write('%d, %d, %d, %d, %d' % (entry, label0, label1, label2, label3))
   for score in score_v:
     fout.write(',%g' % score)
   fout.write('\n')
