@@ -37,8 +37,8 @@ from toydata import make_classification_images as make_images
 sess = tf.InteractiveSession()
 
 #PLACEHOLDERS                                                                 
-x = tf.placeholder(tf.float32, [None, 784],name='x')
-y_ = tf.placeholder(tf.float32, [None, 4],name='labels')
+x = tf.placeholder(tf.float32,  [None, 784],name='x')
+y_ = tf.placeholder(tf.float32, [None, cfg.NUM_CLASS],name='labels')
 
 #RESHAPE IMAGE IF NEED BE                                                     
 x_image = tf.reshape(x, [-1,28,28,1])
@@ -96,12 +96,12 @@ for i in range(cfg.TRAIN_ITERATIONS):
     sess.run(train_step,feed_dict={x: batch[0], y_: batch[1]})                                    
 
     if i%1000 ==0:
-        batchtest = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG)
+        batchtest = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG,multiplicities=False)
         test_accuracy = accuracy.eval(feed_dict={x:batchtest[0], y_:batchtest[1]})
         print("step %d, test accuracy %g"%(i, test_accuracy))
 
 # post training test
-batch = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG)
+batch = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG,multiplicities=False)
 print("Final test accuracy %g"%accuracy.eval(feed_dict={x: batch[0], y_: batch[1]}))
 
 # inform log directory
@@ -134,7 +134,7 @@ for entry,score_v in enumerate(score_vv):
     fout.write(',%g' % score)
   fout.write('\n')
  
-  if not label == prediction:
+  if cfg.DEBUG and not label == prediction:
     fig, ax = plt.subplots(figsize = (28,28), facecolor = 'w')
     plt.imshow(np.reshape(batch[0][idx], (28, 28)), interpolation = 'none')
     plt.savefig('entry%0d-%d.png' % (idx, label))

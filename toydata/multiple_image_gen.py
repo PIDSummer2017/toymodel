@@ -115,7 +115,7 @@ class image_gen_counter:
 
 #@ future me: make this more elegant, less inputs, etc. use classes? work on this tomorrow
 
-def generate_training_images(num_images=100,debug=0,bad_label = False, noise = 0, multlabels = img.MULTLABELS):
+def generate_training_images(num_images=1000,debug=0,bad_label = False, noise = 0, multlabels = img.MULTLABELS):
     bad_locations = []
     images = []
     vals = []
@@ -153,8 +153,8 @@ def generate_training_images(num_images=100,debug=0,bad_label = False, noise = 0
  
     if bad_label:
         return images, bad_locations
+    
     #print locations
-
     if multlabels:
         vals = np.reshape(vals, (4, num_images, 5))
     return images, vals
