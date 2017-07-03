@@ -139,6 +139,10 @@ for idx in xrange(cfg.NUM_CLASS):
   fout.write(',score%02d' % idx)
 fout.write('\n')
 
+import matplotlib as mpl
+mpl.use('agg')
+from matplotlib import pyplot as plt
+import numpy as np
 # run ana
 batch    = make_images(cfg.ANA_BATCH_SIZE,debug=cfg.DEBUG,bad_label=False)
 score_vv = sigmoid.eval(feed_dict={x: batch[0]})
@@ -155,5 +159,12 @@ for entry,score_v in enumerate(score_vv):
   for score in score_v:
     fout.write(',%g' % score)
   fout.write('\n')
+
+  for i in range(4):
+    if not np.int(score_v[i]) == batch[1][entry][i]:
+      plt.figure()
+      plt.imshow(np.reshape(batch[0][entry], (28,28)), interpolation = 'nearest')
+      plt.savefig(str(entry)+str(batch[1][entry])+str(score_v)+'.png')
+      plt.close()
 
 fout.close()
