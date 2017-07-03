@@ -82,7 +82,7 @@ writer.add_graph(sess.graph)
 #TRAINING                                                                  
 for i in range(cfg.TRAIN_ITERATIONS):
 
-    batch = make_images(cfg.TRAIN_BATCH_SIZE,debug=cfg.DEBUG, bad_label=False)
+    batch = make_images(cfg.TRAIN_BATCH_SIZE,debug=cfg.DEBUG, bad_label= cfg.BAD_LABEL)
     #print(batch[1])
     #print(batch)
     if i%100 == 0:
@@ -97,12 +97,12 @@ for i in range(cfg.TRAIN_ITERATIONS):
     sess.run(train_step,feed_dict={x: batch[0], y_: batch[1]})                                    
 
     if i%1000 ==0:
-        batchtest = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG, bad_label=False)
+        batchtest = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG,bad_label=cfg.BAD_LABEL)
         test_accuracy = accuracy.eval(feed_dict={x:batchtest[0], y_:batchtest[1]})
         print("step %d, test accuracy %g"%(i, test_accuracy))
 
 # post training test
-batch = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG, bad_label=False)
+batch = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG,bad_label=cfg.BAD_LABEL)
 print("Final test accuracy %g"%accuracy.eval(feed_dict={x: batch[0], y_: batch[1]}))
 
 
