@@ -105,6 +105,9 @@ for i in range(cfg.TRAIN_ITERATIONS):
     
         print("step %d, training accuracy %g"%(i, train_accuracy))
 
+        save_path = saver.save(sess,'%s_step%06d' % (cfg.ARCHITECTURE,i))
+        print 'saved @',save_path
+
     sess.run(train_step,feed_dict={x: batch[0], y_: batch[1]})                                    
 
     if i%1000 ==0:
