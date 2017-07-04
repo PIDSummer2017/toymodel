@@ -139,7 +139,7 @@ for i in range(cfg.TRAIN_ITERATIONS):
       print 'max loc @',np.unravel_index(img.argmax(),img.shape),'...',
       print imgname
   
-  if i%100 == 0:
+  if (i+1)%100 == 0:
     
     s = sess.run(merged_summary, feed_dict={x:data, y_:label})
     writer.add_summary(s,i)
