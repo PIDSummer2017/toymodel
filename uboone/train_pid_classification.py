@@ -113,6 +113,9 @@ for i in xrange(cfg.TRAIN_BATCH_SIZE):
 #TRAINING                                                                     
 for i in range(cfg.TRAIN_ITERATIONS):
 
+  sys.stdout.write('Training in progress @ step %d\r')
+  sys.stdout.flush()
+
   data,label = proc.next()
   proc.read_next(cfg.TRAIN_BATCH_SIZE)
 
@@ -131,7 +134,7 @@ for i in range(cfg.TRAIN_ITERATIONS):
       imgname = 'debug_class_%d_entry_%04d.png' % (np.argmax(label[idx]),i*cfg.TRAIN_ITERATIONS+idx)
       if os.path.isfile(imgname): raise Exception
       adcpng.write_png(imgname)
-
+      print
       print '%-3d' % (i*cfg.TRAIN_ITERATIONS+idx),'...',
       print 'shape',img.shape,
       print img.min(),'=>', img.max(),'...',
@@ -145,7 +148,7 @@ for i in range(cfg.TRAIN_ITERATIONS):
     writer.add_summary(s,i)
   
     train_accuracy = accuracy.eval(feed_dict={x:data, y_: label})
-    
+    print
     print("step %d, training accuracy %g"%(i, train_accuracy))
     save_path = saver.save(sess,'%s_step%06d' % (cfg.ARCHITECTURE,i))
     print 'saved @',save_path
