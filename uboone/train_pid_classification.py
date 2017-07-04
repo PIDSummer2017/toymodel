@@ -1,6 +1,6 @@
 #IMPORT NECESSARY PACKAGES
 import os,sys,time
-from toy_config import toy_config
+from toytrain import toy_config
 #
 # Define constants
 #
@@ -147,6 +147,8 @@ for i in range(cfg.TRAIN_ITERATIONS):
     train_accuracy = accuracy.eval(feed_dict={x:data, y_: label})
     
     print("step %d, training accuracy %g"%(i, train_accuracy))
+    save_path = saver.save(sess,'%s_step%06d' % (cfg.ARCHITECTURE,i))
+    print 'saved @',save_path
 
   sess.run(train_step,feed_dict={x: data, y_: label})
 
