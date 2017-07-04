@@ -113,9 +113,6 @@ for i in xrange(cfg.TRAIN_BATCH_SIZE):
 #TRAINING                                                                     
 for i in range(cfg.TRAIN_ITERATIONS):
 
-  sys.stdout.write('Training in progress @ step %d\r')
-  sys.stdout.flush()
-
   data,label = proc.next()
   proc.read_next(cfg.TRAIN_BATCH_SIZE)
 
@@ -124,6 +121,11 @@ for i in range(cfg.TRAIN_ITERATIONS):
     temp_labels[batch_ctr][int(label[batch_ctr][0])] = 1.
 
   label = np.array(temp_labels).astype(np.float32)
+
+  loss,_ = sess.run([cross_entropy,train_step],feed_dict={x: data, y_: label})
+
+  sys.stdout.write('Training in progress @ step %d loss %g\r' % (i,loss))
+  sys.stdout.flush()
 
   if cfg.DEBUG:
     for idx in xrange(len(data)):
@@ -142,18 +144,18 @@ for i in range(cfg.TRAIN_ITERATIONS):
       print 'max loc @',np.unravel_index(img.argmax(),img.shape),'...',
       print imgname
   
-  if (i+1)%100 == 0:
+  if (i+1)%50 == 0:
     
     s = sess.run(merged_summary, feed_dict={x:data, y_:label})
     writer.add_summary(s,i)
   
-    train_accuracy = accuracy.eval(feed_dict={x:data, y_: label})
+    train_accuracy = sess.run(accuracy,feed_dict={x:data, y_: label})
     print
     print("step %d, training accuracy %g"%(i, train_accuracy))
+
+  if (i+1)%200 == 0:
     save_path = saver.save(sess,'%s_step%06d' % (cfg.ARCHITECTURE,i))
     print 'saved @',save_path
-
-  sess.run(train_step,feed_dict={x: data, y_: label})
 
 #  if i%1000 ==0:
 #    batchtest = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG,multiplicities=False)
