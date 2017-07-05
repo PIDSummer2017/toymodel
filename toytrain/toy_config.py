@@ -4,18 +4,23 @@ class toy_config:
 
         self.NUM_CLASS        = 5
         self.TRAIN_BATCH_SIZE = 100
-        self.TEST_BATCH_SIZE  = 1000
-        self.ANA_BATCH_SIZE   = 0
+        self.TEST_BATCH_SIZE  = 100
+        self.ANA_BATCH_SIZE   = 100
         self.TRAIN_ITERATIONS = 1000
         self.LOGDIR           = 'logs'
         self.ARCHITECTURE     = 'lenet'
         self.BAD_LABEL        = False
+<<<<<<< HEAD
         self.TEST_BATCH_SIZE  = 100
         self.ANA_BATCH_SIZE   = 100
         self.TRAIN_ITERATIONS = 1000
         self.LOGDIR           = 'logs'
        # self.ARCHITECTURE     = 'multi_lenet'
+=======
+        self.MULTI_LABEL      = False
+>>>>>>> 95c204879f5999b6c9164ce6ee4bd6909c63bb15
         self.DEBUG            = 0
+        self.ANA_FILE         = ''
 
     def parse(self,argv_v):
 
@@ -45,6 +50,10 @@ class toy_config:
                     self.DEBUG = int(argv.replace('debug=',''))
                 elif argv.startswith('bad_label='):
                     self.BAD_LABEL = int(argv.replace('bad_label=',''))
+                elif argv.startswith('multi_label='):
+                    self.MULTI_LABEL = int(argv.replace('multi_label=',''))
+                elif argv.startswith('ana_file='):
+                    self.ANA_FILE = argv.replace('ana_file=','')
 
             except Exception:
                 print 'argument:',argv,'not in a valid format (parsing failed!)'
@@ -62,6 +71,7 @@ class toy_config:
         msg += '    architecture       = %s\n' % self.ARCHITECTURE
         msg += '    debug mode         = %d\n' % self.DEBUG
         msg += '    bad label          = %d\n' % self.BAD_LABEL
+        msg += '    multi label        = %d\n' % self.MULTI_LABEL
         return msg
 
 if __name__ == '__main__':

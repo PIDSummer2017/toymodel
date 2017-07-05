@@ -1,8 +1,8 @@
 import random,sys
 from toydatabasic import *
-from toydata_varconfig import test_image
+from toydata_varconfig import gen_config
 
-img = test_image()
+img = gen_config.get_shared()
 
 dims=(img.IMSIZE,img.IMSIZE) # this is data (2d array) dimension (x,y)
 

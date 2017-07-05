@@ -4,11 +4,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 from scipy import optimize
-from toydata_varconfig import test_image
+from toydata_varconfig import gen_config
 
-img = test_image()
-
-print img
+img = gen_config.get_shared()
 
 def _image(array):
     fig,ax = plt.subplots(figsize=(img.IMSIZE, img.IMSIZE),facecolor='w')

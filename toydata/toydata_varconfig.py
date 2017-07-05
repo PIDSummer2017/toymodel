@@ -1,12 +1,22 @@
-class test_image:
+class gen_config:
+
+    _global_gen_config = None
+
+    @classmethod
+    def get_shared(cls):
+        if cls._global_gen_config is None:
+            cls._global_gen_config = cls()
+        return cls._global_gen_config
+
     def __init__(self):
         self.SHAPE_SIZE = 5
         self.PIX_VAL = 180
-        self.MULTLABELS = False
+        self.MULTLABELS = True
         self.IMSIZE = 28
         self.NUM_SHAPES = 4
         self.ALLOWED = [True, True, True, True]
-        self.MULTIPLICITIES = [1, 1, 1, 1]
+        self.MULTIPLICITIES = [2,2,2,2]
+
               
       #self.PROBS = 4
 
@@ -33,6 +43,7 @@ class test_image:
   #      msg = 'configuration parameters:\n'
  #       msg += ' Shape Size = %d\n' %self.SHAPE_SIZE
 #        msg += 'Image Size = %d' %self.IMSIZE
+
 
 if __name__ == '__main__':
     import sys
