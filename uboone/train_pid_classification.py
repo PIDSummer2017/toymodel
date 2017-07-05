@@ -122,6 +122,8 @@ for i in range(cfg.TRAIN_ITERATIONS):
 
   label = np.array(temp_labels).astype(np.float32)
 
+  print cross_entropy
+
   if cfg.DEBUG:
     for idx in xrange(len(data)):
       img = None
@@ -131,6 +133,7 @@ for i in range(cfg.TRAIN_ITERATIONS):
       imgname = 'debug_class_%d_entry_%04d.png' % (np.argmax(label[idx]),i*cfg.TRAIN_ITERATIONS+idx)
       if os.path.isfile(imgname): raise Exception
       adcpng.write_png(imgname)
+      plt.close()
 
       print '%-3d' % (i*cfg.TRAIN_ITERATIONS+idx),'...',
       print 'shape',img.shape,
@@ -168,5 +171,25 @@ print("Final test accuracy %g"%accuracy.eval(feed_dict={x: data, y_: label}))
 
 # inform log directory
 print('Run `tensorboard --logdir=%s` in terminal to see the results.' % cfg.LOGDIR)
+
+from matplotlib import pyplot as plt
+batch    = make_images(cfg.ANA_BATCH_SIZE,debug=cfg.DEBUG)
+score_vv = softmax.eval(feed_dict={x: batch[0]})
+for entry,score_v in enumerate(score_vv):
+  label = int(np.argmax(batch[1][entry]))
+  prediction = int(np.argmax(score_v))
+  fout.write('%d,%d,%d' % (entry, label, prediction))
+  for score in score_v:
+    fout.write(',%g' % score)
+  fout.write('\n')
+
+  if cfg.DEBUG and not label == prediction:
+    fig, ax = plt.subplots(figsize = (28,28), facecolor = 'w')
+    plt.imshow(np.reshape(batch[0][idx], (28, 28)), interpolation = 'n\
+one')
+    plt.savefig('entry%0d-%d.png' % (idx, label))
+    plt.close()
+
+fout.close()
 
 
