@@ -78,11 +78,11 @@ exec(cmd)
 
 #SOFTMAX
 with tf.name_scope('softmax'):
-  softmax = tf.nn.softmax(logits=net)
+  softmax = tf.nn.sigmoid(net)
 
 #CROSS-ENTROPY                                                                
 with tf.name_scope('cross_entropy'):
-  cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=net))
+  cross_entropy = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=y_, logits=net))
   tf.summary.scalar('cross_entropy',cross_entropy)
 
 #TRAINING (RMS OR ADAM-OPTIMIZER OPTIONAL)                                    

@@ -122,12 +122,14 @@ for i in range(cfg.TRAIN_ITERATIONS):
 
   label = np.array(temp_labels).astype(np.float32)
 
-
+<<<<<<< HEAD
   print cross_entropy
+=======
   loss,_ = sess.run([cross_entropy,train_step],feed_dict={x: data, y_: label})
 
   sys.stdout.write('Training in progress @ step %d loss %g\r' % (i,loss))
   sys.stdout.flush()
+>>>>>>> 95c204879f5999b6c9164ce6ee4bd6909c63bb15
 
   if cfg.DEBUG:
     for idx in xrange(len(data)):
@@ -138,9 +140,8 @@ for i in range(cfg.TRAIN_ITERATIONS):
       imgname = 'debug_class_%d_entry_%04d.png' % (np.argmax(label[idx]),i*cfg.TRAIN_ITERATIONS+idx)
       if os.path.isfile(imgname): raise Exception
       adcpng.write_png(imgname)
-      plt.close()
-
-      print '%-3d' % (i*cfg.TRAIN_ITERATIONS+idx),'...',
+<<<<<<< HEAD
+      plt.closeprint '%-3d' % (i*cfg.TRAIN_ITERATIONS+idx),'...',
       print 'shape',img.shape,
       print img.min(),'=>', img.max(),'...',
       print img.mean(),'+/-',img.std(),'...',
