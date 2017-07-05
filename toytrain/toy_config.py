@@ -2,7 +2,7 @@ class toy_config:
 
     def __init__(self):
 
-        self.NUM_CLASS        = 4
+        self.NUM_CLASS        = 5
         self.TRAIN_BATCH_SIZE = 100
         self.TEST_BATCH_SIZE  = 100
         self.ANA_BATCH_SIZE   = 100
@@ -10,7 +10,15 @@ class toy_config:
         self.LOGDIR           = 'logs'
         self.ARCHITECTURE     = 'lenet'
         self.BAD_LABEL        = False
+<<<<<<< HEAD
+        self.TEST_BATCH_SIZE  = 100
+        self.ANA_BATCH_SIZE   = 100
+        self.TRAIN_ITERATIONS = 1000
+        self.LOGDIR           = 'logs'
+       # self.ARCHITECTURE     = 'multi_lenet'
+=======
         self.MULTI_LABEL      = False
+>>>>>>> 95c204879f5999b6c9164ce6ee4bd6909c63bb15
         self.DEBUG            = 0
         self.ANA_FILE         = ''
 

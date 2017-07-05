@@ -160,6 +160,7 @@ def generate_training_images(num_images=1000,debug=0,bad_label = False, noise = 
         return images, bad_locations
     
     #print locations
+
     if multlabels:
         vals = np.reshape(vals, (4, num_images, 5))
     return images, vals
