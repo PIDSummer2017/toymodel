@@ -1,4 +1,4 @@
-#IMPORT NECESSARY PACKAGE
+#IMPORT NECESSAARY PACKAGE
 import os,sys
 from toy_config import toy_config
 #
