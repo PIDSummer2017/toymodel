@@ -31,6 +31,7 @@ if os.path.isdir(cfg.LOGDIR):
 # Check if chosen network is available
 try:
   cmd = 'from toynet import toy_%s' % cfg.ARCHITECTURE
+  print cmd
   exec(cmd)
 except Exception:
   print 'Architecture',cfg.ARCHITECTURE,'is not available...'
@@ -65,24 +66,11 @@ exec(cmd)
 with tf.name_scope('softmax'):
   softmax = tf.nn.softmax(logits=net)
 
-#CROSS-ENTROPY                                                                
-with tf.name_scope('cross_entropy'):
-  cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=net))
-  tf.summary.scalar('cross_entropy',cross_entropy)
-
-#TRAINING (RMS OR ADAM-OPTIMIZER OPTIONAL)                                    
-with tf.name_scope('train'):
-  train_step = tf.train.RMSPropOptimizer(0.0003).minimize(cross_entropy)
-
 #ACCURACY                                                                     
 with tf.name_scope('accuracy'):
   correct_prediction = tf.equal(tf.argmax(net,1), tf.argmax(y_,1))
   accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
   tf.summary.scalar('accuracy', accuracy)
-
-saver= tf.train.Saver()
-
-sess.run(tf.global_variables_initializer())
 
 #MERGE SUMMARIES FOR TENSORBOARD                                              
 merged_summary=tf.summary.merge_all()
@@ -91,29 +79,11 @@ merged_summary=tf.summary.merge_all()
 writer=tf.summary.FileWriter(cfg.LOGDIR)
 writer.add_graph(sess.graph)
 
-#TRAINING                                                                     
-for i in range(cfg.TRAIN_ITERATIONS):
+sess.run(tf.global_variables_initializer())
 
-    batch = make_images(cfg.TRAIN_BATCH_SIZE,debug=cfg.DEBUG, multiplicities= False)
-
-    if i%100 == 0:
-        
-        s = sess.run(merged_summary, feed_dict={x:batch[0], y_:batch[1]})
-        writer.add_summary(s,i)
-        
-        train_accuracy = accuracy.eval(feed_dict={x:batch[0], y_: batch[1]})
-    
-        print("step %d, training accuracy %g"%(i, train_accuracy))
-
-        save_path = saver.save(sess,'%s_step%06d' % (cfg.ARCHITECTURE,i))
-        print 'saved @',save_path
-
-    sess.run(train_step,feed_dict={x: batch[0], y_: batch[1]})                                    
-
-    if i%1000 ==0:
-        batchtest = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG,multiplicities=False)
-        test_accuracy = accuracy.eval(feed_dict={x:batchtest[0], y_:batchtest[1]})
-        print("step %d, test accuracy %g"%(i, test_accuracy))
+saver= tf.train.Saver()
+saver = tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)
+saver.restore(sess,tf.train.latest_checkpoint('./'))
 
 # post training test
 batch = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG,multiplicities=False)

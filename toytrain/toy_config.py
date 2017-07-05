@@ -12,6 +12,7 @@ class toy_config:
         self.BAD_LABEL        = False
         self.MULTI_LABEL      = False
         self.DEBUG            = 0
+        self.ANA_FILE         = ''
 
     def parse(self,argv_v):
 
@@ -43,6 +44,8 @@ class toy_config:
                     self.BAD_LABEL = int(argv.replace('bad_label=',''))
                 elif argv.startswith('multi_label='):
                     self.MULTI_LABEL = int(argv.replace('multi_label=',''))
+                elif argv.startswith('ana_file='):
+                    self.ANA_FILE = argv.replace('ana_file=','')
 
             except Exception:
                 print 'argument:',argv,'not in a valid format (parsing failed!)'

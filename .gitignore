@@ -5,3 +5,7 @@
 *.log
 *.csv
 log*/
+*.data*
+*.meta
+*.index
+checkpoint
