@@ -10,11 +10,13 @@ class toy_config:
         self.LOGDIR           = 'logs'
         self.ARCHITECTURE     = 'lenet'
         self.BAD_LABEL        = False
+
         self.TEST_BATCH_SIZE  = 100
         self.ANA_BATCH_SIZE   = 100
         self.TRAIN_ITERATIONS = 1000
         self.LOGDIR           = 'logs'
        # self.ARCHITECTURE     = 'multi_lenet'
+
         self.MULTI_LABEL      = False
         self.DEBUG            = 0
         self.ANA_FILE         = ''
