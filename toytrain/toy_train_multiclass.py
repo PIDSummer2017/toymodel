@@ -1,4 +1,4 @@
-#IMPORT NECESSARY PACKAGE
+#IMPORT NECESSAARY PACKAGE
 import os,sys
 from toy_config import toy_config
 #
@@ -173,7 +173,7 @@ for entry,score_v in enumerate(score_vv):
   fout.write('\n')
 
   for i in range(4):
-    if not np.int(score_v[i]) == batch[1][entry][i]:
+    if not np.int(score_v[i]+0.5) == batch[1][entry][i]:
       plt.figure()
       plt.imshow(np.reshape(batch[0][entry], (28,28)), interpolation = 'nearest')
       plt.savefig(str(entry)+str(batch[1][entry])+str(score_v)+'.png')
