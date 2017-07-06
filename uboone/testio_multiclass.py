@@ -4,7 +4,7 @@ def time_round(num,digits):
   return float( int(num * np.power(10,digits)) / float(np.power(10,digits)) )
 
 proc = larcv_data()
-cfg = {'filler_name': 'DataFiller', 'verbosity':0, 'filler_cfg':'train_filler.cfg'}
+cfg = {'filler_name': 'DataFiller', 'verbosity':0, 'filler_cfg':'multiclass_filler.cfg'}
 proc.configure(cfg)
 
 BATCH_SIZE=20
