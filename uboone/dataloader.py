@@ -22,8 +22,10 @@ class larcv_data (object):
       self._batch = -1
       self._image_data = None
       self._image_data_size = None
+      self._image_dim = None
       self._label_data = None
       self._label_data_size = None
+      self._label_dim = None
 
       self.time_data_read  = 0
       self.time_data_conv  = 0
@@ -31,6 +33,12 @@ class larcv_data (object):
       self.time_label_conv = 0
       self.time_label_copy = 0
       self.read_counter = 0
+
+   def image_dim(self):
+      return self._image_dim
+
+   def label_dim(self):
+      return self._label_dim
 
    def reset(self):
       if self.is_reading():
@@ -86,7 +94,8 @@ class larcv_data (object):
       self._proc.batch_process(batch)
 
    def is_reading(self):
-      return (self._batch > 0)
+      return self._proc.thread_running()
+      #return (self._batch > 0)
 
    def next(self):
       if self._batch <= 0:
@@ -125,20 +134,26 @@ class larcv_data (object):
          self._image_data_size = self._image_data.size
          self._label_data = np.array(self._proc.labels())
          self._label_data_size = self._label_data.size
+         self._image_dim = np.array(self._proc.dim(True ))
+         self._label_dim = np.array(self._proc.dim(False))
       else:
          self._image_data = self._image_data.reshape(self._image_data.size)
          larcv.copy_array(self._image_data,self._proc.data())
          self._label_data = self._label_data.reshape(self._label_data.size)
          larcv.copy_array(self._label_data,self._proc.labels())
+         self._image_dim[0] = self._batch
+         self._label_dim[0] = self._batch
 
       if self.read_counter: self.time_data_copy += time.time() - ctime
 
       ctime = time.time()
-      self._image_data = self._image_data.reshape(self._batch,self._proc.data().size()/self._batch).astype(np.float32)
+      self._image_entry_data_size = self._proc.data().size() / self._batch
+      self._image_data = self._image_data.reshape(self._batch,self._image_entry_data_size).astype(np.float32)
       if self.read_counter: self.time_data_conv += time.time() - ctime
 
       ctime = time.time()
-      self._label_data = self._label_data.reshape(self._batch,self._proc.labels().size()/self._batch).astype(np.float32)
+      self._label_entry_data_size = self._proc.labels().size() / self._batch
+      self._label_data = self._label_data.reshape(self._batch,self._label_entry_data_size).astype(np.float32)
       if self.read_counter: self.time_label_conv += time.time() - ctime
 
       self._batch = -1

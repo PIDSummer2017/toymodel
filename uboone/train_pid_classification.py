@@ -55,7 +55,7 @@ def time_round(num,digits):
 proc = larcv_data()
 filler_cfg = {'filler_name': 'DataFiller', 
               'verbosity':0, 
-              'filler_cfg':'%s/uboone/train_filler.cfg' % os.environ['TOYMODEL_DIR']}
+              'filler_cfg':'%s/uboone/oneclass_filler.cfg' % os.environ['TOYMODEL_DIR']}
 
 proc.configure(filler_cfg)
 proc.read_next(cfg.TRAIN_BATCH_SIZE)

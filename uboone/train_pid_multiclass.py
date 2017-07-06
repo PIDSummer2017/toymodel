@@ -55,20 +55,24 @@ def time_round(num,digits):
 proc = larcv_data()
 filler_cfg = {'filler_name': 'DataFiller', 
               'verbosity':0, 
-              'filler_cfg':'%s/uboone/train_filler.cfg' % os.environ['TOYMODEL_DIR']}
+              'filler_cfg':'%s/uboone/multiclass_filler.cfg' % os.environ['TOYMODEL_DIR']}
 
 proc.configure(filler_cfg)
 proc.read_next(cfg.TRAIN_BATCH_SIZE)
+proc.next()
+proc.read_next(cfg.TRAIN_BATCH_SIZE)
+image_dim = proc.image_dim()
+label_dim = proc.label_dim()
 
 #START ACTIVE SESSION                                                         
 sess = tf.InteractiveSession()
 
 #PLACEHOLDERS                                                                 
-x = tf.placeholder(tf.float32,  [None, 576*576],name='x')
+x  = tf.placeholder(tf.float32, [None, image_dim[2] * image_dim[3]],name='x')
 y_ = tf.placeholder(tf.float32, [None, cfg.NUM_CLASS],name='labels')
 
 #RESHAPE IMAGE IF NEED BE                                                     
-x_image = tf.reshape(x, [-1,576,576,1])
+x_image = tf.reshape(x, [-1,image_dim[2],image_dim[3],1])
 tf.summary.image('input',x_image,10)
 
 #BUILD NETWORK
@@ -106,24 +110,12 @@ merged_summary=tf.summary.merge_all()
 writer=tf.summary.FileWriter(cfg.LOGDIR)
 writer.add_graph(sess.graph)
 
-temp_labels = []
-for i in xrange(cfg.TRAIN_BATCH_SIZE):
-  temp_labels.append([0]*5)
-
 #TRAINING                                                                     
 for i in range(cfg.TRAIN_ITERATIONS):
 
   data,label = proc.next()
   proc.read_next(cfg.TRAIN_BATCH_SIZE)
 
-  for batch_ctr in xrange(cfg.TRAIN_BATCH_SIZE):
-    temp_labels[batch_ctr] = [0.]*5
-    temp_labels[batch_ctr][int(label[batch_ctr][0])] = 1.
-
-  label = np.array(temp_labels).astype(np.float32)
-
-
-  print cross_entropy
   loss,_ = sess.run([cross_entropy,train_step],feed_dict={x: data, y_: label})
 
   sys.stdout.write('Training in progress @ step %d loss %g\r' % (i,loss))
@@ -132,10 +124,13 @@ for i in range(cfg.TRAIN_ITERATIONS):
   if cfg.DEBUG:
     for idx in xrange(len(data)):
       img = None
-      img = data[idx].reshape([576,576])
+      img = data[idx].reshape(image_dim[2],image_dim[3])
       
       adcpng = plt.imshow(img)
-      imgname = 'debug_class_%d_entry_%04d.png' % (np.argmax(label[idx]),i*cfg.TRAIN_ITERATIONS+idx)
+      imgname = 'debug_class_'
+      for v in label[idx]:
+        imgname += str(v)
+      imgname += '_entry_%04d.png' % (i*cfg.TRAIN_ITERATIONS+idx)
       if os.path.isfile(imgname): raise Exception
       adcpng.write_png(imgname)
       plt.close()
