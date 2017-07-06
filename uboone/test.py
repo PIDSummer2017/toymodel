@@ -14,7 +14,11 @@ while 1:
   
   data,label = proc.next()
   proc.read_next(BATCH_SIZE)
-  print 'Data  copy:',time_round(proc.time_data_copy / float(proc.read_counter),4),'[s]',
-  print 'conv',time_round(proc.time_data_conv / float(proc.read_counter),4),'[s]'
-  print 'Label copy:',time_round(proc.time_label_copy / float(proc.read_counter),4),'[s]',
-  print 'conv:',time_round(proc.time_label_conv / float(proc.read_counter),4),'[s]'
+
+  print 'Loaded image data w/ shape:', data.shape
+  print 'Loaded label data w/ shape:', label.shape
+  print label[0]
+  print 'Data  IO time taken:',time_round(proc.time_data_copy / float(proc.read_counter),4),'[s]',
+  print '+ reshape',time_round(proc.time_data_conv / float(proc.read_counter),4),'[s]'
+  print 'Label IO time taken:',time_round(proc.time_label_copy / float(proc.read_counter),4),'[s]',
+  print '+ reshape',time_round(proc.time_label_conv / float(proc.read_counter),4),'[s]'
