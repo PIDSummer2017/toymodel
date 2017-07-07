@@ -81,26 +81,47 @@ with tf.name_scope('softmax'):
   softmax = tf.nn.softmax(logits=net)
 
 #CROSS-ENTROPY                                                                
-with tf.name_scope('cross_entropy'):
-  cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=net))
-  tf.summary.scalar('cross_entropy',cross_entropy)
+#with tf.name_scope('cross_entropy'):
+#  cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=net))
+#  tf.summary.scalar('cross_entropy',cross_entropy)
 
 #TRAINING (RMS OR ADAM-OPTIMIZER OPTIONAL)                                    
-with tf.name_scope('train'):
-  train_step = tf.train.RMSPropOptimizer(0.0003).minimize(cross_entropy)
+#with tf.name_scope('train'):
+#  train_step = tf.train.RMSPropOptimizer(0.0003).minimize(cross_entropy)
 
 #ACCURACY                                                                     
 with tf.name_scope('accuracy'):
   correct_prediction = tf.equal(tf.argmax(net,1), tf.argmax(y_,1))
   accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
   tf.summary.scalar('accuracy', accuracy)
+#
+# MERGE SUMMARIES FOR TENSORBOARD                                              
+merged_summary=tf.summary.merge_all()
 
 saver= tf.train.Saver()
 
 sess.run(tf.global_variables_initializer())
+#saver= tf.train.Saver()
+#saver = tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)
+#saver.restore(sess,tf.train.latest_checkpoint('/data/ssfehlberg/toymodel/uboone'))
+
+#CROSS-ENTROPY                                                                                        
+with tf.name_scope('cross_entropy'):
+  cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=net))
+  tf.summary.scalar('cross_entropy',cross_entropy)
+
+#TRAINING (RMS OR ADAM-OPTIMIZER OPTIONAL)                                                            
+with tf.name_scope('train'):
+  train_step = tf.train.RMSPropOptimizer(0.0003).minimize(cross_entropy)
 
 #MERGE SUMMARIES FOR TENSORBOARD                                              
 merged_summary=tf.summary.merge_all()
+
+
+saver= tf.train.Saver()
+sess.run(tf.global_variables_initializer())
+
+
 
 #WRITE SUMMARIES TO LOG DIRECTORY LOGS6                                       
 writer=tf.summary.FileWriter(cfg.LOGDIR)
@@ -165,6 +186,15 @@ for i in range(cfg.TRAIN_ITERATIONS):
 #    test_accuracy = accuracy.eval(feed_dict={x:batchtest[0], y_:batchtest[1]})
 #    print("step %d, test accuracy %g"%(i, test_accuracy))
 
+
+saver= tf.train.Saver()                                                                              
+saver = tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)                                         
+saver.restore(sess,tf.train.latest_checkpoint('/data/ssfehlberg/toymodel/uboone'))   
+
+temp_labels = []
+for i in xrange(cfg.TRAIN_BATCH_SIZE):
+  temp_labels.append([0]*5)
+
 # post training test
 data,label = proc.next()
 proc.read_next(cfg.TEST_BATCH_SIZE)
@@ -179,24 +209,5 @@ print("Final test accuracy %g"%accuracy.eval(feed_dict={x: data, y_: label}))
 # inform log directory
 print('Run `tensorboard --logdir=%s` in terminal to see the results.' % cfg.LOGDIR)
 
-from matplotlib import pyplot as plt
-batch    = make_images(cfg.ANA_BATCH_SIZE,debug=cfg.DEBUG)
-score_vv = softmax.eval(feed_dict={x: batch[0]})
-for entry,score_v in enumerate(score_vv):
-  label = int(np.argmax(batch[1][entry]))
-  prediction = int(np.argmax(score_v))
-  fout.write('%d,%d,%d' % (entry, label, prediction))
-  for score in score_v:
-    fout.write(',%g' % score)
-  fout.write('\n')
-
-  if cfg.DEBUG and not label == prediction:
-    fig, ax = plt.subplots(figsize = (28,28), facecolor = 'w')
-    plt.imshow(np.reshape(batch[0][idx], (28, 28)), interpolation = 'n\
-one')
-    plt.savefig('entry%0d-%d.png' % (idx, label))
-    plt.close()
-
-fout.close()
 
 
