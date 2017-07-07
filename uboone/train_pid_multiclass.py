@@ -95,7 +95,9 @@ with tf.name_scope('train'):
 
 #ACCURACY                                                                     
 with tf.name_scope('accuracy'):
-  correct_prediction = tf.equal(tf.argmax(net,1), tf.argmax(y_,1))
+#  correct_prediction = tf.equal(tf.argmax(net,1), tf.argmax(y_,1))
+#  accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+  correct_prediction = tf.equal(tf.rint(sigmoid), tf.rint(y_))
   accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
   tf.summary.scalar('accuracy', accuracy)
 
