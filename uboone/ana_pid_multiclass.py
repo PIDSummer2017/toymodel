@@ -37,20 +37,28 @@ def time_round(num,digits):
 proc = larcv_data()
 filler_cfg = {'filler_name': 'DataFiller',
               'verbosity':0,
-              'filler_cfg':'%s/uboone/oneclass_filler.cfg' % os.environ['TOYMODEL_DIR']}
+              'filler_cfg':'%s/uboone/multiclass_filler.cfg' % os.environ['TOYMODEL_DIR']}
+
 
 proc.configure(filler_cfg)
 proc.read_next(cfg.TRAIN_BATCH_SIZE)
+proc.next()
+proc.read_next(cfg.TRAIN_BATCH_SIZE)
+image_dim = proc.image_dim()
+label_dim = proc.label_dim()
 
-#START ACTIVE SESSION
+#START ACTIVE SESSION                                                 \
+
 sess = tf.InteractiveSession()
 
-#PLACEHOLDERS
-x = tf.placeholder(tf.float32,  [None, 576*576],name='x')
+#PLACEHOLDERS                                                         \
+
+x  = tf.placeholder(tf.float32, [None, image_dim[2] * image_dim[3]],name='x')
 y_ = tf.placeholder(tf.float32, [None, cfg.NUM_CLASS],name='labels')
 
-#RESHAPE IMAGE IF NEED BE
-x_image = tf.reshape(x, [-1,576,576,1])
+#RESHAPE IMAGE IF NEED BE                                             \
+
+x_image = tf.reshape(x, [-1,image_dim[2],image_dim[3],1])
 tf.summary.image('input',x_image,10)
 
 #BUILD NETWORK
@@ -78,39 +86,43 @@ saver= tf.train.Saver()
 saver = tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)
 saver.restore(sess,tf.train.latest_checkpoint('./'))
 
-temp_labels = []
-for i in xrange(cfg.TRAIN_BATCH_SIZE):
-  temp_labels.append([0]*5)
+
+fout = open('%s/analysis.csv' % cfg.LOGDIR,'w')
+fout.write('entry,label0, label1, label2, label3')
+for idx in xrange(cfg.NUM_CLASS):
+  fout.write(',score%02d' % idx)
+fout.write('\n')
 
 # post training test
+#data,label = proc.next()
+#proc.read_next(cfg.TEST_BATCH_SIZE)
+#data,label = proc.next()
+#print("Final test accuracy %g"%accuracy.eval(feed_dict={x: data, y_: label}))
+
+from matplotlib import pyplot as plt
+
 data,label = proc.next()
 proc.read_next(cfg.TEST_BATCH_SIZE)
 data,label = proc.next()
-for batch_ctr in xrange(cfg.TEST_BATCH_SIZE):
-  temp_labels[batch_ctr] = [0.]*5
-  temp_labels[batch_ctr][int(label[batch_ctr][0])] = 1.
+print np.shape(data[0])
+print label
 
-label = np.array(temp_labels).astype(np.float32)
-print("Final test accuracy %g"%accuracy.eval(feed_dict={x: data, y_: label}))
+for element in xrange(cfg.TRAIN_BATCH_SIZE):
+  score_vv = sigmoid.eval(feed_dict={x:data[element]})
+  for entry,score_v in enumerate(score_vv):
+    fout.write('%d' % (entry))
+    for item in xrange(cfg.NUM_CLASS):
+      labelz = label[entry][item]
+      fout.write('%d' % (labelz))
+    for score in score_v:
+      fout.write(',%g' % score)
+    fout.write('\n')
 
-from matplotlib import pyplot as plt
-batch    = proc.read_next(cfg.ANA_BATCH_SIZE)
-score_vv = sigmoid.eval(feed_dict={x: batch[0]})
-for entry,score_v in enumerate(score_vv):
-  label0 = batch[1][entry][0]
-  label1 = batch[1][entry][1]
-  label2 = batch[1][entry][2]
-  label3 = batch[1][entry][3]
-  fout.write('%d, %d, %d, %d, %d' % (entry, label0, label1, label2, label3))
-  for score in score_v:
-    fout.write(',%g' % score)
-  fout.write('\n')
-
-  for i in range(4):
-    if not np.int(score_v[i]+0.5) == batch[1][entry][i]:
-      plt.figure()
-      plt.imshow(np.reshape(batch[0][entry], (28,28)), interpolation = 'nearest')
-      plt.savefig(str(entry)+str(batch[1][entry])+str(score_v)+'.png')
-      plt.close()
+    for i in range(4):
+      if not np.int(score_v[i]+0.5) == batch[1][entry][i]:
+        plt.figure()
+        plt.imshow(np.reshape(batch[0][entry], (28,28)), interpolation = 'nearest')
+        plt.savefig(str(entry)+str(batch[1][entry])+str(score_v)+'.png')
+        plt.close()
 
 fout.close()

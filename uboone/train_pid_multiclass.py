@@ -170,3 +170,4 @@ print("Final test accuracy %g"%accuracy.eval(feed_dict={x: data, y_: label}))
 
 # inform log directory
 print('Run `tensorboard --logdir=%s` in terminal to see the results.' % cfg.LOGDIR)
+
