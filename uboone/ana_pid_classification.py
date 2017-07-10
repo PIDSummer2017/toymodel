@@ -76,7 +76,12 @@ saver= tf.train.Saver()
 sess.run(tf.global_variables_initializer())
 saver= tf.train.Saver()
 saver = tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)
-saver.restore(sess,tf.train.latest_checkpoint('./'))
+saver.restore(sess,tf.train.latest_checkpoint('/data/ssfehlberg/toymodel/uboone'))
+for var in tf.global_variables():
+  print var.name#, sess.run(var)
+
+sess.run(tf.global_variables_initializer())
+
 
 temp_labels = []
 for i in xrange(cfg.TRAIN_BATCH_SIZE):
