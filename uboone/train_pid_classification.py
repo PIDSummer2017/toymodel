@@ -1,16 +1,15 @@
 #IMPORT NECESSARY PACKAGES
 import os,sys,time
 from toytrain import toy_config
-#
-# Define constants
-#
+
+#DEFINE CONSTANTS
 cfg = toy_config()
 if not cfg.parse(sys.argv):
   print '[ERROR] Configuraion failure!'
   print 'Exiting...'
   sys.exit(1)
 
-# Check if log directory already exists
+#CHECK IF LOG DIRECTORY ALREADY EXISTS 
 if os.path.isdir(cfg.LOGDIR):
   print '[WARNING] Log directory already present:',cfg.LOGDIR
   user_input=None
@@ -28,7 +27,7 @@ if os.path.isdir(cfg.LOGDIR):
   else:
     os.system('rm -rf %s' % cfg.LOGDIR)
 
-# Check if chosen network is available
+#CHECK IF CHOSEN NETWORK IS AVAILABLE
 try:
   cmd = 'from toynet import toy_%s' % cfg.ARCHITECTURE
   exec(cmd)
@@ -36,12 +35,12 @@ except Exception:
   print 'Architecture',cfg.ARCHITECTURE,'is not available...'
   sys.exit(1)
 
-# Print configuration
+#PRINT CONFIGURATION
 print '\033[95mConfiguration\033[00m'
 print cfg
 time.sleep(0.5)
 
-# ready to import heavy packages
+#READY TO IMPORT HEAVY PACKAGES 
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -57,6 +56,7 @@ filler_cfg = {'filler_name': 'DataFiller',
               'verbosity':0, 
               'filler_cfg':'%s/uboone/oneclass_filler.cfg' % os.environ['TOYMODEL_DIR']}
 
+#MULTITHREADING 
 proc.configure(filler_cfg)
 proc.read_next(cfg.TRAIN_BATCH_SIZE)
 
@@ -70,7 +70,7 @@ y_ = tf.placeholder(tf.float32, [None, cfg.NUM_CLASS],name='labels')
 #RESHAPE IMAGE IF NEED BE                                                     
 x_image = tf.reshape(x, [-1,576,576,1])
 tf.summary.image('input',x_image,10)
-
+  
 #BUILD NETWORK
 net = None
 cmd = 'net=toy_%s.build(x_image,cfg.NUM_CLASS)' % cfg.ARCHITECTURE
@@ -81,34 +81,19 @@ with tf.name_scope('softmax'):
   softmax = tf.nn.softmax(logits=net)
 
 #CROSS-ENTROPY                                                                
-#with tf.name_scope('cross_entropy'):
-#  cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=net))
-#  tf.summary.scalar('cross_entropy',cross_entropy)
-
-#TRAINING (RMS OR ADAM-OPTIMIZER OPTIONAL)                                    
-#with tf.name_scope('train'):
-#  train_step = tf.train.RMSPropOptimizer(0.0003).minimize(cross_entropy)
+with tf.name_scope('cross_entropy'):
+  cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=net))
+  tf.summary.scalar('cross_entropy',cross_entropy)
 
 #ACCURACY                                                                     
 with tf.name_scope('accuracy'):
   correct_prediction = tf.equal(tf.argmax(net,1), tf.argmax(y_,1))
   accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
   tf.summary.scalar('accuracy', accuracy)
-#
-# MERGE SUMMARIES FOR TENSORBOARD                                              
-merged_summary=tf.summary.merge_all()
 
-saver= tf.train.Saver()
-
-sess.run(tf.global_variables_initializer())
-#saver= tf.train.Saver()
+#saver= tf.train.Saver(conv1_1/conv1_1_weights)
 #saver = tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)
-#saver.restore(sess,tf.train.latest_checkpoint('/data/ssfehlberg/toymodel/uboone'))
-
-#CROSS-ENTROPY                                                                                        
-with tf.name_scope('cross_entropy'):
-  cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=net))
-  tf.summary.scalar('cross_entropy',cross_entropy)
+#saver.restore(sess,tf.train.latest_checkpoint('./')
 
 #TRAINING (RMS OR ADAM-OPTIMIZER OPTIONAL)                                                            
 with tf.name_scope('train'):
@@ -117,11 +102,15 @@ with tf.name_scope('train'):
 #MERGE SUMMARIES FOR TENSORBOARD                                              
 merged_summary=tf.summary.merge_all()
 
-
-saver= tf.train.Saver()
 sess.run(tf.global_variables_initializer())
+for var in tf.global_variables():
+  print var.name#, sess.run(var)  
 
 
+saver= tf.train.Saver({conv1_1/conv1_1_weights} )
+saver = tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)
+saver.restore(sess,tf.train.latest_checkpoint('./'))
+saver= tf.train.Saver({'conv1_1_weights':conv1_1/conv1_1_weights,'conv1_1_biases':conv1_1/conv1_1_biases} )
 
 #WRITE SUMMARIES TO LOG DIRECTORY LOGS6                                       
 writer=tf.summary.FileWriter(cfg.LOGDIR)
@@ -143,8 +132,7 @@ for i in range(cfg.TRAIN_ITERATIONS):
 
   label = np.array(temp_labels).astype(np.float32)
 
-
-  print cross_entropy
+  #print cross_entropy
   loss,_ = sess.run([cross_entropy,train_step],feed_dict={x: data, y_: label})
 
   sys.stdout.write('Training in progress @ step %d loss %g\r' % (i,loss))
@@ -187,9 +175,9 @@ for i in range(cfg.TRAIN_ITERATIONS):
 #    print("step %d, test accuracy %g"%(i, test_accuracy))
 
 
-saver= tf.train.Saver()                                                                              
-saver = tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)                                         
-saver.restore(sess,tf.train.latest_checkpoint('/data/ssfehlberg/toymodel/uboone'))   
+#saver= tf.train.Saver()                                                                              
+#saver = tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)                                         
+#saver.restore(sess,tf.train.latest_checkpoint('/data/ssfehlberg/toymodel/uboone'))   
 
 temp_labels = []
 for i in xrange(cfg.TRAIN_BATCH_SIZE):
