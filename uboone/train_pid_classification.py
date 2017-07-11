@@ -110,7 +110,7 @@ sess.run(tf.global_variables_initializer())
 #LOAD IN A FILE IF YOU WANT
 if cfg.LOAD_FILE is True: 
   save=tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)
-  save.restore(sess,tf.train.latest_checkpoint('/data/ssfehlberg/toymodel/uboone'))
+  save.restore(sess,tf.train.latest_checkpoint('./'))
 
 
 #GOOD FOR DEBUGGING!
