@@ -168,30 +168,9 @@ for i in range(cfg.TRAIN_ITERATIONS):
 data,label = proc.next()
 proc.read_next(cfg.TEST_BATCH_SIZE)
 data,label = proc.next()
-sess.run(accuracy,feed_dict={x:data[0],y_:label[1]})
+sess.run(accuracy,feed_dict={x:data,y_:label})
 
 print("Final test accuracy %g"%accuracy.eval(feed_dict={x: data, y_: label}))
 
 # inform log directory
 print('Run `tensorboard --logdir=%s` in terminal to see the results.' % cfg.LOGDIR)
-
-from matplotlib import pyplot as plt
-batch    = make_images(cfg.ANA_BATCH_SIZE,debug=cfg.DEBUG)
-score_vv = sigmoid.eval(feed_dict={x: batch[0]})
-for entry,score_v in enumerate(score_vv):
-  label = int(np.argmax(batch[1][entry]))
-  prediction = int(np.argmax(score_v))
-  fout.write('%d,%d,%d' % (entry, label, prediction))
-  for score in score_v:
-    fout.write(',%g' % score)
-  fout.write('\n')
-
-  if cfg.DEBUG and not label == prediction:
-    fig, ax = plt.subplots(figsize = (28,28), facecolor = 'w')
-    plt.imshow(np.reshape(batch[0][idx], (28, 28)), interpolation = 'n\
-one')
-    plt.savefig('entry%0d-%d.png' % (idx, label))
-    plt.close()
-
-fout.close()
-

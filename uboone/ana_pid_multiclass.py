@@ -124,3 +124,4 @@ for element in xrange(cfg.TRAIN_BATCH_SIZE):
         plt.close()
 
 fout.close()
+OB
