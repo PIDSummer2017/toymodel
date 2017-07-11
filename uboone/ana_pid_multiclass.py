@@ -79,12 +79,10 @@ with tf.name_scope('accuracy'):
 #MERGE SUMMARIES FOR TENSORBOARD
 merged_summary=tf.summary.merge_all()
 
-saver= tf.train.Saver()
-
 sess.run(tf.global_variables_initializer())
 saver= tf.train.Saver()
 saver = tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)
-saver.restore(sess,tf.train.latest_checkpoint('./'))
+saver.restore(sess,tf.train.latest_checkpoint(''))
 
 
 fout = open('%s/analysis.csv' % cfg.LOGDIR,'w')
