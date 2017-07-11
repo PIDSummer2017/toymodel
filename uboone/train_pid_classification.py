@@ -1,16 +1,15 @@
 #IMPORT NECESSARY PACKAGES
 import os,sys,time
 from toytrain import toy_config
-#
-# Define constants
-#
+
+#DEFINE CONSTANTS
 cfg = toy_config()
 if not cfg.parse(sys.argv):
   print '[ERROR] Configuraion failure!'
   print 'Exiting...'
   sys.exit(1)
 
-# Check if log directory already exists
+#CHECK IF LOG DIRECTORY ALREADY EXISTS 
 if os.path.isdir(cfg.LOGDIR):
   print '[WARNING] Log directory already present:',cfg.LOGDIR
   user_input=None
@@ -28,7 +27,7 @@ if os.path.isdir(cfg.LOGDIR):
   else:
     os.system('rm -rf %s' % cfg.LOGDIR)
 
-# Check if chosen network is available
+#CHECK IF CHOSEN NETWORK IS AVAILABLE
 try:
   cmd = 'from toynet import toy_%s' % cfg.ARCHITECTURE
   exec(cmd)
@@ -36,12 +35,12 @@ except Exception:
   print 'Architecture',cfg.ARCHITECTURE,'is not available...'
   sys.exit(1)
 
-# Print configuration
+#PRINT CONFIGURATION
 print '\033[95mConfiguration\033[00m'
 print cfg
 time.sleep(0.5)
 
-# ready to import heavy packages
+#READY TO IMPORT HEAVY PACKAGES 
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -57,6 +56,7 @@ filler_cfg = {'filler_name': 'DataFiller',
               'verbosity':0, 
               'filler_cfg':'%s/uboone/oneclass_filler.cfg' % os.environ['TOYMODEL_DIR']}
 
+#MULTITHREADING 
 proc.configure(filler_cfg)
 proc.read_next(cfg.TRAIN_BATCH_SIZE)
 
@@ -70,7 +70,7 @@ y_ = tf.placeholder(tf.float32, [None, cfg.NUM_CLASS],name='labels')
 #RESHAPE IMAGE IF NEED BE                                                     
 x_image = tf.reshape(x, [-1,576,576,1])
 tf.summary.image('input',x_image,10)
-
+  
 #BUILD NETWORK
 net = None
 cmd = 'net=toy_%s.build(x_image,cfg.NUM_CLASS)' % cfg.ARCHITECTURE
@@ -85,22 +85,32 @@ with tf.name_scope('cross_entropy'):
   cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=net))
   tf.summary.scalar('cross_entropy',cross_entropy)
 
-#TRAINING (RMS OR ADAM-OPTIMIZER OPTIONAL)                                    
-with tf.name_scope('train'):
-  train_step = tf.train.RMSPropOptimizer(0.0003).minimize(cross_entropy)
-
 #ACCURACY                                                                     
 with tf.name_scope('accuracy'):
   correct_prediction = tf.equal(tf.argmax(net,1), tf.argmax(y_,1))
   accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
   tf.summary.scalar('accuracy', accuracy)
 
-saver= tf.train.Saver()
+#saver= tf.train.Saver(conv1_1/conv1_1_weights)
+#saver = tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)
+#saver.restore(sess,tf.train.latest_checkpoint('./')
 
-sess.run(tf.global_variables_initializer())
+#TRAINING (RMS OR ADAM-OPTIMIZER OPTIONAL)                                                            
+with tf.name_scope('train'):
+  train_step = tf.train.RMSPropOptimizer(0.0003).minimize(cross_entropy)
 
 #MERGE SUMMARIES FOR TENSORBOARD                                              
 merged_summary=tf.summary.merge_all()
+
+sess.run(tf.global_variables_initializer())
+for var in tf.global_variables():
+  print var.name#, sess.run(var)  
+
+
+saver= tf.train.Saver({conv1_1/conv1_1_weights} )
+saver = tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)
+saver.restore(sess,tf.train.latest_checkpoint('./'))
+saver= tf.train.Saver({'conv1_1_weights':conv1_1/conv1_1_weights,'conv1_1_biases':conv1_1/conv1_1_biases} )
 
 #WRITE SUMMARIES TO LOG DIRECTORY LOGS6                                       
 writer=tf.summary.FileWriter(cfg.LOGDIR)
@@ -122,8 +132,7 @@ for i in range(cfg.TRAIN_ITERATIONS):
 
   label = np.array(temp_labels).astype(np.float32)
 
-
-  print cross_entropy
+  #print cross_entropy
   loss,_ = sess.run([cross_entropy,train_step],feed_dict={x: data, y_: label})
 
   sys.stdout.write('Training in progress @ step %d loss %g\r' % (i,loss))
@@ -165,6 +174,15 @@ for i in range(cfg.TRAIN_ITERATIONS):
 #    test_accuracy = accuracy.eval(feed_dict={x:batchtest[0], y_:batchtest[1]})
 #    print("step %d, test accuracy %g"%(i, test_accuracy))
 
+
+#saver= tf.train.Saver()                                                                              
+#saver = tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)                                         
+#saver.restore(sess,tf.train.latest_checkpoint('/data/ssfehlberg/toymodel/uboone'))   
+
+temp_labels = []
+for i in xrange(cfg.TRAIN_BATCH_SIZE):
+  temp_labels.append([0]*5)
+
 # post training test
 data,label = proc.next()
 proc.read_next(cfg.TEST_BATCH_SIZE)
@@ -179,24 +197,5 @@ print("Final test accuracy %g"%accuracy.eval(feed_dict={x: data, y_: label}))
 # inform log directory
 print('Run `tensorboard --logdir=%s` in terminal to see the results.' % cfg.LOGDIR)
 
-from matplotlib import pyplot as plt
-batch    = make_images(cfg.ANA_BATCH_SIZE,debug=cfg.DEBUG)
-score_vv = softmax.eval(feed_dict={x: batch[0]})
-for entry,score_v in enumerate(score_vv):
-  label = int(np.argmax(batch[1][entry]))
-  prediction = int(np.argmax(score_v))
-  fout.write('%d,%d,%d' % (entry, label, prediction))
-  for score in score_v:
-    fout.write(',%g' % score)
-  fout.write('\n')
-
-  if cfg.DEBUG and not label == prediction:
-    fig, ax = plt.subplots(figsize = (28,28), facecolor = 'w')
-    plt.imshow(np.reshape(batch[0][idx], (28, 28)), interpolation = 'n\
-one')
-    plt.savefig('entry%0d-%d.png' % (idx, label))
-    plt.close()
-
-fout.close()
 
 
