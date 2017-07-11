@@ -20,8 +20,10 @@ class toy_config:
         self.MULTI_LABEL      = False
         self.DEBUG            = 0
         self.ANA_FILE         = ' '
-
-
+        self.LOAD_FILE        = True
+        self.ANA_SAVE         = True
+        self.TRAIN_SAVE       = True
+    
     def parse(self,argv_v):
 
         cfg_file=None
@@ -54,7 +56,13 @@ class toy_config:
                     self.MULTI_LABEL = int(argv.replace('multi_label=',''))
                 elif argv.startswith('ana_file='):
                     self.ANA_FILE = argv.replace('ana_file=','')
-
+                elif argv.startswith('load_file='):
+                    self.LOAD_FILE = argv.replace('load_file=','')
+                elif argv.startswith('ana_save='):
+                    self.SAVE_FILE = argv.replace('ana_save=','')
+                elif argv.startswith('train_save='):
+                    self.SAVE_FILE = argv.replace('train_save=','') 
+ 
             except Exception:
                 print 'argument:',argv,'not in a valid format (parsing failed!)'
                 return False
