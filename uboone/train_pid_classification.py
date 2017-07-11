@@ -85,11 +85,12 @@ with tf.name_scope('cross_entropy'):
   cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=net))
   tf.summary.scalar('cross_entropy',cross_entropy)
 
-a=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
-saver=tf.train.Saver(var_list=a)
-sess.run(tf.global_variables_initializer())
-save_path = saver.save(sess,'%s' % (cfg.ARCHITECTURE))
-print 'saved @',save_path
+if cfg.TRAIN_SAVE is True:
+  a=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
+  saver=tf.train.Saver(var_list=a)
+  sess.run(tf.global_variables_initializer())
+  save_path = saver.save(sess,'%s' % (cfg.ARCHITECTURE) + 'train')
+  print 'saved @',save_path
 
 #TRAINING (RMS OR ADAM-OPTIMIZER OPTIONAL)                                                                                      
 with tf.name_scope('train'):
@@ -104,12 +105,15 @@ with tf.name_scope('accuracy'):
 #MERGE SUMMARIES FOR TENSORBOARD                                              
 merged_summary=tf.summary.merge_all()
 
-#saver=tf.train.Saver(var_list=a)
 sess.run(tf.global_variables_initializer())
-save=tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)
-save.restore(sess,tf.train.latest_checkpoint('/data/ssfehlberg/toymodel/uboone'))
 
-#good for debugging
+#LOAD IN A FILE IF YOU WANT
+if cfg.LOAD_FILE is True: 
+  save=tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)
+  save.restore(sess,tf.train.latest_checkpoint('/data/ssfehlberg/toymodel/uboone'))
+
+
+#GOOD FOR DEBUGGING!
 #for var in tf.global_variables():
 #  print var#.name#, sess.run(var) 
 
@@ -132,8 +136,6 @@ for i in range(cfg.TRAIN_ITERATIONS):
     temp_labels[batch_ctr][int(label[batch_ctr][0])] = 1.
 
   label = np.array(temp_labels).astype(np.float32)
-
-  #print cross_entropy
   loss,_ = sess.run([cross_entropy,train_step],feed_dict={x: data, y_: label})
 
   sys.stdout.write('Training in progress @ step %d loss %g\r' % (i,loss))
@@ -166,19 +168,11 @@ for i in range(cfg.TRAIN_ITERATIONS):
     print
     print("step %d, training accuracy %g"%(i, train_accuracy))
     print(sess)
-  if (i+1)%200 == 0:
-    ssf_path = saver.save(sess,'%s_step%06d' % (cfg.ARCHITECTURE,i))
-    print 'saved @',save_path
 
-#  if i%1000 ==0:
-#    batchtest = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG,multiplicities=False)
-#    test_accuracy = accuracy.eval(feed_dict={x:batchtest[0], y_:batchtest[1]})
-#    print("step %d, test accuracy %g"%(i, test_accuracy))
-
-
-#saver= tf.train.Saver()                                                                              
-#saver = tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)                                         
-#saver.restore(sess,tf.train.latest_checkpoint('/data/ssfehlberg/toymodel/uboone'))   
+  if cfg.ANA_SAVE is True:
+    if (i+1)%200 == 0:
+      ssf_path = saver.save(sess,'%s_step%06d' % (cfg.ARCHITECTURE + 'ana',i))
+      print 'saved @',ssf_path
 
 temp_labels = []
 for i in xrange(cfg.TRAIN_BATCH_SIZE):
