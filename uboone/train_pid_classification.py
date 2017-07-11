@@ -111,11 +111,6 @@ for var in tf.training_variables():
 print 'this is what net is'
 print net
 
-saver= tf.train.Saver([conv1_1/conv1_1_weights, conv1_1/conv1_1_biases, conv1_2/conv1_2_weights, conv1_2/conv1_2_biases, pool1, conv2_1/conv2_1_weights, conv2_2, pool2, conv3_1, conv3_2, pool3, conv4_1, conv4_2, pool4, conv5_1, conv5_2, pool4])
-saver = tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)
-saver.restore(sess,tf.train.latest_checkpoint('./'))
-saver= tf.train.Saver([conv1_1, conv1_2, pool1, conv2_1,conv2_2, pool2, conv3_1, conv3_2, pool3, conv4_1, conv4_2, pool4, conv5_1, conv5_2, pool4])
-
 #WRITE SUMMARIES TO LOG DIRECTORY LOGS6                                       
 writer=tf.summary.FileWriter(cfg.LOGDIR)
 writer.add_graph(sess.graph)
