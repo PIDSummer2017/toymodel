@@ -163,10 +163,6 @@ for entry,score_v in enumerate(score_vv):
   label1 = batch[1][entry][1]
   label2 = batch[1][entry][2]
   label3 = batch[1][entry][3]
-  #prediction0 = score_v[0]
-  #prediction1 = score_v[1]
-  #prediction2 = score_v[2]
- # prediction3 = score_v[3]
   fout.write('%d, %d, %d, %d, %d' % (entry, label0, label1, label2, label3))
   for score in score_v:
     fout.write(',%g' % score)
@@ -174,6 +170,12 @@ for entry,score_v in enumerate(score_vv):
 
   for i in range(4):
     if not np.int(score_v[i]+0.5) == batch[1][entry][i]:
+      plt.figure()
+      plt.imshow(np.reshape(batch[0][entry], (28,28)), interpolation = 'nearest')
+      plt.savefig(str(entry)+str(batch[1][entry])+str(score_v)+'.png')
+      plt.close()
+
+  if entry %10:
       plt.figure()
       plt.imshow(np.reshape(batch[0][entry], (28,28)), interpolation = 'nearest')
       plt.savefig(str(entry)+str(batch[1][entry])+str(score_v)+'.png')

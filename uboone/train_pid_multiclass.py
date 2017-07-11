@@ -80,8 +80,9 @@ net = None
 cmd = 'net=toy_%s.build(x_image,cfg.NUM_CLASS)' % cfg.ARCHITECTURE
 exec(cmd)
 
+
 #SIGMOID
-with tf.name_scope('Sigmoid'):
+with tf.name_scope('sigmoid'):
   sigmoid = tf.nn.sigmoid(net)
 
 #CROSS-ENTROPY                                                                
@@ -97,6 +98,7 @@ with tf.name_scope('train'):
 with tf.name_scope('accuracy'):
 #  correct_prediction = tf.equal(tf.argmax(net,1), tf.argmax(y_,1))
 #  accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
   correct_prediction = tf.equal(tf.rint(sigmoid), tf.rint(y_))
   accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
   tf.summary.scalar('accuracy', accuracy)
@@ -166,11 +168,8 @@ for i in range(cfg.TRAIN_ITERATIONS):
 data,label = proc.next()
 proc.read_next(cfg.TEST_BATCH_SIZE)
 data,label = proc.next()
-for batch_ctr in xrange(cfg.TEST_BATCH_SIZE):
-  temp_labels[batch_ctr] = [0.]*5
-  temp_labels[batch_ctr][int(label[batch_ctr][0])] = 1.
+sess.run(accuracy,feed_dict={x:data[0],y_:label[1]})
 
-label = np.array(temp_labels).astype(np.float32)
 print("Final test accuracy %g"%accuracy.eval(feed_dict={x: data, y_: label}))
 
 # inform log directory
@@ -195,5 +194,4 @@ one')
     plt.close()
 
 fout.close()
-
 

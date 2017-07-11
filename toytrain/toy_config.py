@@ -19,7 +19,8 @@ class toy_config:
 
         self.MULTI_LABEL      = False
         self.DEBUG            = 0
-        self.ANA_FILE         = ''
+        self.ANA_FILE         = ' '
+
 
     def parse(self,argv_v):
 
