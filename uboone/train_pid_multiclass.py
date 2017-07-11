@@ -103,12 +103,21 @@ with tf.name_scope('accuracy'):
   accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
   tf.summary.scalar('accuracy', accuracy)
 
-saver= tf.train.Saver()
-
+if cfg.TRAIN_SAVE is True:
+  a=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
+  saver=tf.train.Saver(var_list=a)
+  sess.run(tf.global_variables_initializer())
+  save_path = saver.save(sess,'%s' % (cfg.ARCHITECTURE) + 'train')
+  print 'saved @',save_path
 sess.run(tf.global_variables_initializer())
 
 #MERGE SUMMARIES FOR TENSORBOARD                                              
 merged_summary=tf.summary.merge_all()
+
+if cfg.LOAD_FILE is True:
+  save=tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)
+  save.restore(sess,tf.train.latest_checkpoint('./'))
+
 
 #WRITE SUMMARIES TO LOG DIRECTORY LOGS6                                       
 writer=tf.summary.FileWriter(cfg.LOGDIR)
@@ -159,6 +168,11 @@ for i in range(cfg.TRAIN_ITERATIONS):
     save_path = saver.save(sess,'%s_step%06d' % (cfg.ARCHITECTURE,i))
     print 'saved @',save_path
 
+  if cfg.ANA_SAVE is True:
+    if (i+1)%200 == 0:
+      ssf_path = saver.save(sess,'%s_step%06d' % (cfg.ARCHITECTURE + 'ana',i))
+      print 'saved @',ssf_path
+
 #  if i%1000 ==0:
 #    batchtest = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG,multiplicities=False)
 #    test_accuracy = accuracy.eval(feed_dict={x:batchtest[0], y_:batchtest[1]})
@@ -169,6 +183,9 @@ data,label = proc.next()
 proc.read_next(cfg.TEST_BATCH_SIZE)
 data,label = proc.next()
 sess.run(accuracy,feed_dict={x:data,y_:label})
+
+
+
 
 print("Final test accuracy %g"%accuracy.eval(feed_dict={x: data, y_: label}))
 
