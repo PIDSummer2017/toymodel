@@ -114,16 +114,15 @@ sess.run(tf.global_variables_initializer())
 #MERGE SUMMARIES FOR TENSORBOARD                                              
 merged_summary=tf.summary.merge_all()
 
-if cfg.LOAD_FILE is True:
-  save=tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)
-  save.restore(sess,tf.train.latest_checkpoint('./'))
+#save=tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)
+#save.restore(sess,tf.train.latest_checkpoint('./'))
 
 
-#WRITE SUMMARIES TO LOG DIRECTORY LOGS6                                       
+##WRITE SUMMARIES TO LOG DIRECTORY LOGS6                                       
 writer=tf.summary.FileWriter(cfg.LOGDIR)
 writer.add_graph(sess.graph)
 
-#TRAINING                                                                     
+#TRAINING                                                                     ii
 for i in range(cfg.TRAIN_ITERATIONS):
 
   data,label = proc.next()
@@ -165,13 +164,20 @@ for i in range(cfg.TRAIN_ITERATIONS):
     print("step %d, training accuracy %g"%(i, train_accuracy))
 
   if (i+1)%200 == 0:
+    q=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
+    saver=tf.train.Saver(var_list=q)
+    sess.run(tf.global_variables_initializer())
+    ssf_path = saver.save(sess,'%s_step%06d' % (cfg.ARCHITECTURE + 'ana',i))
+    print 'saved @',ssf_path
     save_path = saver.save(sess,'%s_step%06d' % (cfg.ARCHITECTURE,i))
     print 'saved @',save_path
 
-  if cfg.ANA_SAVE is True:
-    if (i+1)%200 == 0:
-      ssf_path = saver.save(sess,'%s_step%06d' % (cfg.ARCHITECTURE + 'ana',i))
-      print 'saved @',ssf_path
+  if (i+1)%200 == 0:
+    q=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
+    saver=tf.train.Saver(var_list=q)
+    sess.run(tf.global_variables_initializer())
+    ssf_path = saver.save(sess,'%s_step%06d' % (cfg.ARCHITECTURE + 'ana',i))
+    print 'saved @',ssf_path
 
 #  if i%1000 ==0:
 #    batchtest = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG,multiplicities=False)

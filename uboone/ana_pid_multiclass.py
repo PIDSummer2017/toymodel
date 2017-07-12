@@ -86,7 +86,7 @@ saver.restore(sess,tf.train.latest_checkpoint(''))
 
 
 fout = open('%s/analysis.csv' % cfg.LOGDIR,'w')
-fout.write('entry,label0, label1, label2, label3')
+fout.write('entry,label0, label1, label2, label3, label4')
 for idx in xrange(cfg.NUM_CLASS):
   fout.write(',score%02d' % idx)
 fout.write('\n')
@@ -105,7 +105,7 @@ data,label = proc.next()
 print np.shape(data[0])
 print label
 
-for element in xrange(cfg.TRAIN_BATCH_SIZE):
+for element in xrange(cfg.ANA_BATCH_SIZE):
   score_vv = sigmoid.eval(feed_dict={x:data})
   for entry,score_v in enumerate(score_vv):
     fout.write('%d' % (entry))

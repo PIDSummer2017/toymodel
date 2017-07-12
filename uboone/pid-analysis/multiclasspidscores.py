@@ -11,15 +11,20 @@ def slice(f):
 
     print df.describe()
 
+    print df
+
     for _ in xrange(5):
         col = "label" + str(_)
-        particletype = df[(col == 1)]
+        particletype = df.loc[df[col]==1]
+        #print particletype
         for entry in xrange(5):
-            var = "score" + str(entry)
+            var = "score0" + str(entry)
+            print 'column'
+            print particletype[var]
             plt.hist(particletype[var])
             plt.title("Scores for "+str(entry)+ " when " + str(_) + "is present")
             plt.xlabel('Sigmoid Score')
-            plt.yalebl('#')
+            plt.ylabel('#')
             plt.savefig('label %d scores %d' % (_, entry))
 
-slice('multiclassbatch30step2500ana.csv')
+slice('analysis.csv')

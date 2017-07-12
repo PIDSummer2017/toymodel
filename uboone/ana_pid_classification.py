@@ -97,7 +97,29 @@ for batch_ctr in xrange(cfg.TEST_BATCH_SIZE):
   temp_labels[batch_ctr][int(label[batch_ctr][0])] = 1.
 
 label = np.array(temp_labels).astype(np.float32)
-print("Final test accuracy %g"%accuracy.eval(feed_dict={x: data, y_: label}))
+print("Final test accuracy %g"%accuracy.eval(feed_dict={x: data, y_: label})
 
 
+fout = open('%s/analysis.csv' % cfg.LOGDIR,'w')
+fout.write('entry,label')
+for idx in xrange(cfg.NUM_CLASS):
+  fout.write(',score%02d' % idx)
+fout.write('\n')
 
+from matplotlib import pyplot as plt
+
+data,label = proc.next()
+proc.read_next(cfg.TEST_BATCH_SIZE)
+data,label = proc.next()
+#print np.shape(data[0])
+#print label
+
+for element in xrange(cfg.ANA_BATCH_SIZE):
+  score_vv = softmax.eval(feed_dict={x:data})
+  for entry,score_v in enumerate(score_vv):
+    fout.write('%d' % (entry))
+    fout.write(',%d' % (label[entry]))
+    for score in score_v:
+      fout.write(',%g' % score)
+    fout.write('\n')data,label = proc.next()
+fout.write()
