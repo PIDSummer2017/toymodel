@@ -85,6 +85,7 @@ with tf.name_scope('cross_entropy'):
   cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=net))
   tf.summary.scalar('cross_entropy',cross_entropy)
 
+#SAVE TRAINIABLE VAIRABLES FOR LATER USE
 if cfg.TRAIN_SAVE is True:
   a=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
   saver=tf.train.Saver(var_list=a)
@@ -105,8 +106,8 @@ with tf.name_scope('accuracy'):
 #MERGE SUMMARIES FOR TENSORBOARD                                              
 merged_summary=tf.summary.merge_all()
 
+#INITIALIZE ALL VARIABLES
 sess.run(tf.global_variables_initializer())
-
 
 #LOAD IN A FILE IF YOU WANT
 if cfg.LOAD_FILE is True: 
@@ -117,6 +118,7 @@ print sess,saver
 #GOOD FOR DEBUGGING!
 #for var in tf.global_variables():
 #  print var#.name#, sess.run(var) 
+
 #WRITE SUMMARIES TO LOG DIRECTORY LOGS6                                       
 writer=tf.summary.FileWriter(cfg.LOGDIR)
 writer.add_graph(sess.graph)
@@ -177,6 +179,10 @@ for i in range(cfg.TRAIN_ITERATIONS):
 temp_labels = []
 for i in xrange(cfg.TRAIN_BATCH_SIZE):
   temp_labels.append([0]*5)
+
+
+#  if i%1000 ==0:                                                                                                               #    batchtest = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG,multiplicities=False)                                          #    test_accuracy = accuracy.eval(feed_dict={x:batchtest[0], y_:batchtest[1]})                                                 #    print("step %d, test accuracy %g"%(i, test_accuracy))   
+
 
 # post training test
 data,label = proc.next()
