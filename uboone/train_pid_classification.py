@@ -89,7 +89,7 @@ if cfg.TRAIN_SAVE is True:
   a=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
   saver=tf.train.Saver(var_list=a)
   sess.run(tf.global_variables_initializer())
-  save_path = saver.save(sess,'%s' % (cfg.ARCHITECTURE) + 'train')
+  save_path = saver.save(sess,'%s' % (cfg.ARCHITECTURE) + '_train')
   print 'saved @',save_path
 
 #TRAINING (RMS OR ADAM-OPTIMIZER OPTIONAL)                                                                                      
@@ -110,8 +110,8 @@ sess.run(tf.global_variables_initializer())
 #LOAD IN A FILE IF YOU WANT
 if cfg.LOAD_FILE is True: 
   save=tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)
-  save.restore(sess,tf.train.latest_checkpoint('./'))
-
+  save.restore(sess,tf.train.latest_checkpoint('/data/ssfehlberg/toymodel/uboone/checkpoint'))
+print sess,saver
 
 #GOOD FOR DEBUGGING!
 #for var in tf.global_variables():
@@ -171,7 +171,7 @@ for i in range(cfg.TRAIN_ITERATIONS):
 
   if cfg.ANA_SAVE is True:
     if (i+1)%200 == 0:
-      ssf_path = saver.save(sess,'%s_step%06d' % (cfg.ARCHITECTURE + 'ana',i))
+      ssf_path = saver.save(sess,'%s_step%06d' % (cfg.ARCHITECTURE + '_ana',i))
       print 'saved @',ssf_path
 
 temp_labels = []
