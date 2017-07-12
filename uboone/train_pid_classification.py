@@ -107,6 +107,7 @@ merged_summary=tf.summary.merge_all()
 
 sess.run(tf.global_variables_initializer())
 
+
 #LOAD IN A FILE IF YOU WANT
 if cfg.LOAD_FILE is True: 
   save=tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)
@@ -116,7 +117,6 @@ print sess,saver
 #GOOD FOR DEBUGGING!
 #for var in tf.global_variables():
 #  print var#.name#, sess.run(var) 
-
 #WRITE SUMMARIES TO LOG DIRECTORY LOGS6                                       
 writer=tf.summary.FileWriter(cfg.LOGDIR)
 writer.add_graph(sess.graph)
@@ -191,6 +191,3 @@ print("Final test accuracy %g"%accuracy.eval(feed_dict={x: data, y_: label}))
 
 # inform log directory
 print('Run `tensorboard --logdir=%s` in terminal to see the results.' % cfg.LOGDIR)
-
-
-

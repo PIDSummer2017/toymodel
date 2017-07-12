@@ -79,12 +79,10 @@ with tf.name_scope('accuracy'):
 #MERGE SUMMARIES FOR TENSORBOARD
 merged_summary=tf.summary.merge_all()
 
-saver= tf.train.Saver()
-
 sess.run(tf.global_variables_initializer())
 saver= tf.train.Saver()
 saver = tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)
-saver.restore(sess,tf.train.latest_checkpoint('./'))
+saver.restore(sess,tf.train.latest_checkpoint(''))
 
 
 fout = open('%s/analysis.csv' % cfg.LOGDIR,'w')
@@ -108,21 +106,21 @@ print np.shape(data[0])
 print label
 
 for element in xrange(cfg.TRAIN_BATCH_SIZE):
-  score_vv = sigmoid.eval(feed_dict={x:data[element]})
+  score_vv = sigmoid.eval(feed_dict={x:data})
   for entry,score_v in enumerate(score_vv):
     fout.write('%d' % (entry))
     for item in xrange(cfg.NUM_CLASS):
       labelz = label[entry][item]
-      fout.write('%d' % (labelz))
+      fout.write(',%d' % (labelz))
     for score in score_v:
       fout.write(',%g' % score)
     fout.write('\n')
 
-    for i in range(4):
-      if not np.int(score_v[i]+0.5) == batch[1][entry][i]:
-        plt.figure()
-        plt.imshow(np.reshape(batch[0][entry], (28,28)), interpolation = 'nearest')
-        plt.savefig(str(entry)+str(batch[1][entry])+str(score_v)+'.png')
-        plt.close()
+   # for i in range(4):
+     # if not np.int(score_v[i]+0.5) == batch[1][entry][i]:
+    #    plt.figure()
+   #     plt.imshow(np.reshape(batch[0][entry], (28,28)), interpolation = 'nearest')
+  #      plt.savefig(str(entry)+str(batch[1][entry])+str(score_v)+'.png')
+ #       plt.close()
 
 fout.close()

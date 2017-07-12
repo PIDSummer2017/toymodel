@@ -56,7 +56,8 @@ y_ = tf.placeholder(tf.float32, [None, 4],name='labels')
 #print(y_)
 #RESHAPE IMAGE IF NEED BE                                                     
 x_image = tf.reshape(x, [-1,28,28,1])
-tf.summary.image('input',x_image,10)
+# number in input is the number of images that will be randomly saved for tb purposes
+tf.summary.image('input',x_image,100)
 
 #BUILD NETWORK
 net = None
