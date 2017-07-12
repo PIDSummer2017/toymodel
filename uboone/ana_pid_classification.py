@@ -76,7 +76,7 @@ saver= tf.train.Saver()
 sess.run(tf.global_variables_initializer())
 #saver= tf.train.Saver()
 save = tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)
-save.restore(sess,tf.train.latest_checkpoint('./'))
+save.restore(sess,tf.train.latest_checkpoint('/data/ssfehlberg/toymodel/uboone/'))
 
 #GOOD FOR DEBUGGIN'!!!!!
 #for var in tf.trainable_variables():
