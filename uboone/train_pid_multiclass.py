@@ -1,16 +1,15 @@
 #IMPORT NECESSARY PACKAGES
 import os,sys,time
 from toytrain import toy_config
-#
-# Define constants
-#
+
+#DEFINE CONSTANTS
 cfg = toy_config()
 if not cfg.parse(sys.argv):
   print '[ERROR] Configuraion failure!'
   print 'Exiting...'
   sys.exit(1)
 
-# Check if log directory already exists
+#CHECK IF LOG DIRECTORY ALREADY EXITS
 if os.path.isdir(cfg.LOGDIR):
   print '[WARNING] Log directory already present:',cfg.LOGDIR
   user_input=None
@@ -28,7 +27,7 @@ if os.path.isdir(cfg.LOGDIR):
   else:
     os.system('rm -rf %s' % cfg.LOGDIR)
 
-# Check if chosen network is available
+#CHECK IS CHOSEN NETWORK IS AVAILABLE
 try:
   cmd = 'from toynet import toy_%s' % cfg.ARCHITECTURE
   exec(cmd)
@@ -36,12 +35,12 @@ except Exception:
   print 'Architecture',cfg.ARCHITECTURE,'is not available...'
   sys.exit(1)
 
-# Print configuration
+#PRINT CONFIGURATION
 print '\033[95mConfiguration\033[00m'
 print cfg
 time.sleep(0.5)
 
-# ready to import heavy packages
+#READY TO IMPORT HEAVY PACKAGES 
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -57,6 +56,7 @@ filler_cfg = {'filler_name': 'DataFiller',
               'verbosity':0, 
               'filler_cfg':'%s/uboone/multiclass_filler.cfg' % os.environ['TOYMODEL_DIR']}
 
+#MULTITHREADING
 proc.configure(filler_cfg)
 proc.read_next(cfg.TRAIN_BATCH_SIZE)
 proc.next()
@@ -80,7 +80,6 @@ net = None
 cmd = 'net=toy_%s.build(x_image,cfg.NUM_CLASS)' % cfg.ARCHITECTURE
 exec(cmd)
 
-
 #SIGMOID
 with tf.name_scope('sigmoid'):
   sigmoid = tf.nn.sigmoid(net)
@@ -90,34 +89,38 @@ with tf.name_scope('cross_entropy'):
   cross_entropy = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=y_, logits=net))
   tf.summary.scalar('cross_entropy',cross_entropy)
 
+#SAVE TRAINABLE VARIABLES FOR LATER USE
+if cfg.TRAIN_SAVE is True:
+  a=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
+  saver=tf.train.Saver(var_list=a)
+  sess.run(tf.global_variables_initializer())
+  save_path = saver.save(sess,'%s' % (cfg.ARCHITECTURE) + '_train')
+  print 'saved @',save_path
+
 #TRAINING (RMS OR ADAM-OPTIMIZER OPTIONAL)                                    
 with tf.name_scope('train'):
   train_step = tf.train.RMSPropOptimizer(0.0003).minimize(cross_entropy)
 
 #ACCURACY                                                                     
 with tf.name_scope('accuracy'):
-#  correct_prediction = tf.equal(tf.argmax(net,1), tf.argmax(y_,1))
-#  accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-
   correct_prediction = tf.equal(tf.rint(sigmoid), tf.rint(y_))
   accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
   tf.summary.scalar('accuracy', accuracy)
 
-if cfg.TRAIN_SAVE is True:
-  a=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
-  saver=tf.train.Saver(var_list=a)
-  sess.run(tf.global_variables_initializer())
-  save_path = saver.save(sess,'%s' % (cfg.ARCHITECTURE) + 'train')
-  print 'saved @',save_path
-sess.run(tf.global_variables_initializer())
-
 #MERGE SUMMARIES FOR TENSORBOARD                                              
 merged_summary=tf.summary.merge_all()
 
+#INITIALZE ALL VARIABLES
+sess.run(tf.global_variables_initializer())
+
+#LOAD IN DATA FILE IF YOU WANT
 if cfg.LOAD_FILE is True:
   save=tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)
   save.restore(sess,tf.train.latest_checkpoint('./'))
 
+#GOOD FOR DEBUGGING
+#for var in tf.global_variables():                                                                                               
+#  print var#.name#, sess.run(var)   
 
 #WRITE SUMMARIES TO LOG DIRECTORY LOGS6                                       
 writer=tf.summary.FileWriter(cfg.LOGDIR)
@@ -164,13 +167,9 @@ for i in range(cfg.TRAIN_ITERATIONS):
     print
     print("step %d, training accuracy %g"%(i, train_accuracy))
 
-  if (i+1)%200 == 0:
-    save_path = saver.save(sess,'%s_step%06d' % (cfg.ARCHITECTURE,i))
-    print 'saved @',save_path
-
   if cfg.ANA_SAVE is True:
     if (i+1)%200 == 0:
-      ssf_path = saver.save(sess,'%s_step%06d' % (cfg.ARCHITECTURE + 'ana',i))
+      ssf_path = saver.save(sess,'%s_step%06d' % (cfg.ARCHITECTURE + '_ana',i))
       print 'saved @',ssf_path
 
 #  if i%1000 ==0:
@@ -184,10 +183,7 @@ proc.read_next(cfg.TEST_BATCH_SIZE)
 data,label = proc.next()
 sess.run(accuracy,feed_dict={x:data,y_:label})
 
-
-
-
 print("Final test accuracy %g"%accuracy.eval(feed_dict={x: data, y_: label}))
 
-# inform log directory
+#INFORM LOG DIRECTORY
 print('Run `tensorboard --logdir=%s` in terminal to see the results.' % cfg.LOGDIR)
