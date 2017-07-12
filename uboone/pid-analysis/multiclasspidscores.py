@@ -21,3 +21,5 @@ def slice(f):
             plt.xlabel('Sigmoid Score')
             plt.yalebl('#')
             plt.savefig('label %d scores %d' % (_, entry))
+
+slice('multiclassbatch30step2500ana.csv')
