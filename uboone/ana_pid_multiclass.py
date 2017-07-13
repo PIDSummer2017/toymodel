@@ -1,21 +1,10 @@
-#IMPORT NECESSARY PACKAGES
+# Basic imports
 import os,sys,time
-from toytrain import toy_config
-#
-# Define constants
-#
-cfg = toy_config()
-if not cfg.parse(sys.argv):
-  print '[ERROR] Configuraion failure!'
-  print 'Exiting...'
-  sys.exit(1)
+from toytrain import config
 
-# Check if chosen network is available
-try:
-  cmd = 'from toynet import toy_%s' % cfg.ARCHITECTURE
-  exec(cmd)
-except Exception:
-  print 'Architecture',cfg.ARCHITECTURE,'is not available...'
+# Load configuration and check if it's good
+cfg = config()
+if not cfg.parse(sys.argv) or not cfg.sanity_check():
   sys.exit(1)
 
 # Print configuration
@@ -23,104 +12,96 @@ print '\033[95mConfiguration\033[00m'
 print cfg
 time.sleep(0.5)
 
-# ready to import heavy packages
+# Import more libraries (after configuration is validated)
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from toynet import toy_lenet
 import numpy as np
 import tensorflow as tf
 import numpy as np
 from dataloader import larcv_data
+
+#
+# Utility functions
+#
+# Integer rounder
 def time_round(num,digits):
   return float( int(num * np.power(10,digits)) / float(np.power(10,digits)) )
+
+#########################
+# main part starts here #
+#########################
+
+#
+# Step 0: configure IO
+#
+
+# Instantiate and configure
 proc = larcv_data()
-filler_cfg = {'filler_name': 'DataFiller',
-              'verbosity':0,
+filler_cfg = {'filler_name': 'DataFiller', 
+              'verbosity':0, 
               'filler_cfg':'%s/uboone/multiclass_filler.cfg' % os.environ['TOYMODEL_DIR']}
-
-
 proc.configure(filler_cfg)
-proc.read_next(cfg.TRAIN_BATCH_SIZE)
+# Spin IO thread first to read in a batch of image (this loads image dimension to the IO python interface)
+proc.read_next(cfg.BATCH_SIZE)
+# Force data to be read (calling next will sleep enough for the IO thread to finidh reading)
 proc.next()
-proc.read_next(cfg.TRAIN_BATCH_SIZE)
+# Immediately start the thread for later IO
+proc.read_next(cfg.BATCH_SIZE)
+# Retrieve image/label dimensions
 image_dim = proc.image_dim()
 label_dim = proc.label_dim()
 
-#START ACTIVE SESSION                                                 \
+#
+# 1) Build network
+#
 
-sess = tf.InteractiveSession()
+# Set input data and label for training
+data_tensor    = tf.placeholder(tf.float32, [None, image_dim[2] * image_dim[3]],name='x')
+label_tensor   = tf.placeholder(tf.float32, [None, cfg.NUM_CLASS],name='labels')
+data_tensor_2d = tf.reshape(data_tensor, [-1,image_dim[2],image_dim[3],1])
 
-#PLACEHOLDERS                                                         \
-
-x  = tf.placeholder(tf.float32, [None, image_dim[2] * image_dim[3]],name='x')
-y_ = tf.placeholder(tf.float32, [None, cfg.NUM_CLASS],name='labels')
-
-#RESHAPE IMAGE IF NEED BE                                             \
-
-x_image = tf.reshape(x, [-1,image_dim[2],image_dim[3],1])
-tf.summary.image('input',x_image,10)
-
-#BUILD NETWORK
+# Call network build function (then we add more train-specific layers)
 net = None
-cmd = 'net=toy_%s.build(x_image,cfg.NUM_CLASS)' % cfg.ARCHITECTURE
+cmd = 'from toynet import toy_%s;net=toy_%s.build(data_tensor_2d,cfg.NUM_CLASS)' % (cfg.ARCHITECTURE,cfg.ARCHITECTURE)
 exec(cmd)
 
-#SOFTMAX
+# Define accuracy
 with tf.name_scope('sigmoid'):
   sigmoid = tf.nn.sigmoid(net)
 
-#ACCURACY
-with tf.name_scope('accuracy'):
-  correct_prediction = tf.equal(tf.rint(sigmoid), tf.rint(y_))
-  accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-  tf.summary.scalar('accuracy', accuracy)
-
-#MERGE SUMMARIES FOR TENSORBOARD
-merged_summary=tf.summary.merge_all()
-
+#
+# 2) Configure global process (session, summary, etc.)
+#
+# Create a session
+sess = tf.InteractiveSession()
+# Initialize variables
 sess.run(tf.global_variables_initializer())
-saver= tf.train.Saver()
-saver = tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)
-saver.restore(sess,tf.train.latest_checkpoint(''))
-
-
+# Override variables if wished
+reader=tf.train.Saver()
+reader.restore(sess,cfg.LOAD_FILE)
+# Analysis csv file
 fout = open('%s/analysis.csv' % cfg.LOGDIR,'w')
-fout.write('entry,label0, label1, label2, label3')
+fout.write('entry,label0, label1, label2, label3, label4')
 for idx in xrange(cfg.NUM_CLASS):
   fout.write(',score%02d' % idx)
-fout.write('\n')
+fout.write('\n')  
+# Run training loop
+for i in range(cfg.ITERATIONS):
 
-# post training test
-#data,label = proc.next()
-#proc.read_next(cfg.TEST_BATCH_SIZE)
-#data,label = proc.next()
-#print("Final test accuracy %g"%accuracy.eval(feed_dict={x: data, y_: label}))
+  # Receive data (this will hang if IO thread is still running = this will wait for thread to finish & receive data)
+  data,label = proc.next()
+  # Start IO thread for the next batch while we train the network
+  proc.read_next(cfg.BATCH_SIZE)
+  # Run loss & train step
+  score_vv = sess.run(sigmoid,feed_dict={data_tensor: data, label_tensor: label})
 
-from matplotlib import pyplot as plt
-
-data,label = proc.next()
-proc.read_next(cfg.TEST_BATCH_SIZE)
-data,label = proc.next()
-print np.shape(data[0])
-print label
-
-for element in xrange(cfg.TRAIN_BATCH_SIZE):
-  score_vv = sigmoid.eval(feed_dict={x:data})
   for entry,score_v in enumerate(score_vv):
-    fout.write('%d' % (entry))
+    fout.write('%d' % (entry + i * cfg.BATCH_SIZE))
     for item in xrange(cfg.NUM_CLASS):
       labelz = label[entry][item]
       fout.write(',%d' % (labelz))
     for score in score_v:
       fout.write(',%g' % score)
     fout.write('\n')
-
-   # for i in range(4):
-     # if not np.int(score_v[i]+0.5) == batch[1][entry][i]:
-    #    plt.figure()
-   #     plt.imshow(np.reshape(batch[0][entry], (28,28)), interpolation = 'nearest')
-  #      plt.savefig(str(entry)+str(batch[1][entry])+str(score_v)+'.png')
- #       plt.close()
-
 fout.close()
