@@ -1,29 +1,18 @@
-class toy_config:
+import os, sys, toynet
+
+class config:
 
     def __init__(self):
+        self.DEBUG      = False
+        self.NUM_CLASS  = 5
+        self.ITERATIONS = 1000
+        self.BATCH_SIZE = 100
+        self.SAVE_ITERATION = 100
+        self.LOGDIR         = 'logs'
+        self.ARCHITECTURE   = 'lenet'
+        self.LOAD_FILE      = ''
+        self.AVOID_LOAD_PARAMS = ''
 
-        self.NUM_CLASS        = 5
-        self.TRAIN_BATCH_SIZE = 100
-        self.TEST_BATCH_SIZE  = 100
-        self.ANA_BATCH_SIZE   = 100
-        self.TRAIN_ITERATIONS = 1000
-        self.LOGDIR           = 'logs'
-        self.ARCHITECTURE     = 'lenet'
-        self.BAD_LABEL        = False
-
-        self.TEST_BATCH_SIZE  = 100
-        self.ANA_BATCH_SIZE   = 100
-        self.TRAIN_ITERATIONS = 1000
-        self.LOGDIR           = 'logs'
-       # self.ARCHITECTURE     = 'multi_lenet'
-
-        self.MULTI_LABEL      = False
-        self.DEBUG            = 0
-        self.ANA_FILE         = ' '
-        self.LOAD_FILE        = True
-        self.ANA_SAVE         = True
-        self.TRAIN_SAVE       = True
-    
     def parse(self,argv_v):
 
         cfg_file=None
@@ -36,50 +25,74 @@ class toy_config:
             try:
                 if   argv.startswith('num_class='):
                     self.NUM_CLASS = int(argv.replace('num_class=',''))
-                elif argv.startswith('train_batch='):
-                    self.TRAIN_BATCH_SIZE = int(argv.replace('train_batch=',''))
-                elif argv.startswith('test_batch='):
-                    self.TEST_BATCH_SIZE = int(argv.replace('test_batch=',''))
-                elif argv.startswith('ana_batch='):
-                    self.ANA_BATCH_SIZE = int(argv.replace('ana_batch=',''))
+                elif argv.startswith('batch='):
+                    self.BATCH_SIZE = int(argv.replace('batch=',''))
                 elif argv.startswith('iterations='):
-                    self.TRAIN_ITERATIONS = int(argv.replace('iterations=',''))
+                    self.ITERATIONS = int(argv.replace('iterations=',''))
                 elif argv.startswith('logdir='):
                     self.LOGDIR = argv.replace('logdir=','')
                 elif argv.startswith('arch='):
                     self.ARCHITECTURE = argv.replace('arch=','')
                 elif argv.startswith('debug='):
                     self.DEBUG = int(argv.replace('debug=',''))
-                elif argv.startswith('bad_label='):
-                    self.BAD_LABEL = int(argv.replace('bad_label=',''))
-                elif argv.startswith('multi_label='):
-                    self.MULTI_LABEL = int(argv.replace('multi_label=',''))
-                elif argv.startswith('ana_file='):
-                    self.ANA_FILE = argv.replace('ana_file=','')
                 elif argv.startswith('load_file='):
-                    self.LOAD_FILE = argv.startswith('load_file=')
-                elif argv.startswith('ana_save='):
-                    self.SAVE_FILE = argv.replace('ana_save=','')
-                elif argv.startswith('train_save='):
-                    self.SAVE_FILE = argv.replace('train_save=','') 
- 
+                    self.LOAD_FILE = argv.replace('load_file=','')
+                elif argv.startswith('save_iteration='):
+                    self.SAVE_ITERATION = int(argv.replace('save_iteration=','') )
+                elif argv.startswith('avoid_params='):
+                    self.AVOID_LOAD_PARAMS = argv.replace('avoid_params=','')
             except Exception:
                 print 'argument:',argv,'not in a valid format (parsing failed!)'
                 return False
+        return True
+
+    def check_log(self):
+        # Check if log directory already exists
+        if not os.path.isdir(self.LOGDIR): return True
+
+        print '[WARNING] Log directory already present:',self.LOGDIR
+        user_input=None
+        while user_input is None:
+            sys.stdout.write('Remove and proceed? [y/n]:')
+            sys.stdout.flush()
+            user_input = sys.stdin.readline().rstrip('\n')
+            if not user_input.lower() in ['y','n','yes','no']:
+                print 'Unsupported answer:',user_input
+                user_input=None
+                continue
+            if user_input in ['n','no']:
+                print 'Exiting...'
+                return False
+            else:
+                os.system('rm -rf %s' % self.LOGDIR)
+                return True
+
+    def sanity_check(self):
+        # log directory duplication
+        if not self.check_log():
+            return False
+
+        # network availability
+        try:
+            cmd = 'from toynet import toy_%s' % self.ARCHITECTURE
+            exec(cmd)
+        except Exception:
+            print 'Architecture',self.ARCHITECTURE,'is not available...'
+            return False
+
         return True
         
     def __str__(self):
         msg  = 'Configuration parameters:\n'
         msg += '    class count        = %d\n' % self.NUM_CLASS
-        msg += '    batch size (train) = %d\n' % self.TRAIN_BATCH_SIZE
-        msg += '    batch size (test)  = %d\n' % self.TEST_BATCH_SIZE
-        msg += '    batch size (ana)   = %d\n' % self.ANA_BATCH_SIZE
-        msg += '    train iterations   = %d\n' % self.TRAIN_ITERATIONS
+        msg += '    batch size         = %d\n' % self.BATCH_SIZE
+        msg += '    iterations         = %d\n' % self.ITERATIONS
         msg += '    log directory      = %s\n' % self.LOGDIR
         msg += '    architecture       = %s\n' % self.ARCHITECTURE
         msg += '    debug mode         = %d\n' % self.DEBUG
-        msg += '    bad label          = %d\n' % self.BAD_LABEL
-        msg += '    multi label        = %d\n' % self.MULTI_LABEL
+        msg += '    load file?         = %s\n' % self.LOAD_FILE
+        msg += '    save per iteration = %s\n' % self.SAVE_ITERATION
+        msg += '    avoid params       = %s\n' % self.AVOID_LOAD_PARAMS
         return msg
 
 if __name__ == '__main__':

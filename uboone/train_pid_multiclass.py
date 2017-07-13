@@ -1,39 +1,10 @@
-#IMPORT NECESSARY PACKAGES
+# Basic imports
 import os,sys,time
-from toytrain import toy_config
-#
-# Define constants
-#
-cfg = toy_config()
-if not cfg.parse(sys.argv):
-  print '[ERROR] Configuraion failure!'
-  print 'Exiting...'
-  sys.exit(1)
+from toytrain import config
 
-# Check if log directory already exists
-if os.path.isdir(cfg.LOGDIR):
-  print '[WARNING] Log directory already present:',cfg.LOGDIR
-  user_input=None
-  while user_input is None:
-    sys.stdout.write('Remove and proceed? [y/n]:')
-    sys.stdout.flush()
-    user_input = sys.stdin.readline().rstrip('\n')
-    if not user_input.lower() in ['y','n','yes','no']:
-      print 'Unsupported answer:',user_input
-      user_input=None
-      continue
-  if user_input in ['n','no']:
-    print 'Exiting...'
-    sys.exit(1)
-  else:
-    os.system('rm -rf %s' % cfg.LOGDIR)
-
-# Check if chosen network is available
-try:
-  cmd = 'from toynet import toy_%s' % cfg.ARCHITECTURE
-  exec(cmd)
-except Exception:
-  print 'Architecture',cfg.ARCHITECTURE,'is not available...'
+# Load configuration and check if it's good
+cfg = config()
+if not cfg.parse(sys.argv) or not cfg.sanity_check():
   sys.exit(1)
 
 # Print configuration
@@ -41,159 +12,146 @@ print '\033[95mConfiguration\033[00m'
 print cfg
 time.sleep(0.5)
 
-# ready to import heavy packages
+# Import more libraries (after configuration is validated)
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from toynet import toy_lenet
 import numpy as np
 import tensorflow as tf
 import numpy as np
 from dataloader import larcv_data
+
+#
+# Utility functions
+#
+# Integer rounder
 def time_round(num,digits):
   return float( int(num * np.power(10,digits)) / float(np.power(10,digits)) )
+
+#########################
+# main part starts here #
+#########################
+
+#
+# Step 0: configure IO
+#
+
+# Instantiate and configure
 proc = larcv_data()
 filler_cfg = {'filler_name': 'DataFiller', 
               'verbosity':0, 
               'filler_cfg':'%s/uboone/multiclass_filler.cfg' % os.environ['TOYMODEL_DIR']}
-
 proc.configure(filler_cfg)
-proc.read_next(cfg.TRAIN_BATCH_SIZE)
+# Spin IO thread first to read in a batch of image (this loads image dimension to the IO python interface)
+proc.read_next(cfg.BATCH_SIZE)
+# Force data to be read (calling next will sleep enough for the IO thread to finidh reading)
 proc.next()
-proc.read_next(cfg.TRAIN_BATCH_SIZE)
+# Immediately start the thread for later IO
+proc.read_next(cfg.BATCH_SIZE)
+# Retrieve image/label dimensions
 image_dim = proc.image_dim()
 label_dim = proc.label_dim()
 
-#START ACTIVE SESSION                                                         
-sess = tf.InteractiveSession()
+#
+# 1) Build network
+#
 
-#PLACEHOLDERS                                                                 
-x  = tf.placeholder(tf.float32, [None, image_dim[2] * image_dim[3]],name='x')
-y_ = tf.placeholder(tf.float32, [None, cfg.NUM_CLASS],name='labels')
+# Set input data and label for training
+data_tensor    = tf.placeholder(tf.float32, [None, image_dim[2] * image_dim[3]],name='x')
+label_tensor   = tf.placeholder(tf.float32, [None, cfg.NUM_CLASS],name='labels')
+data_tensor_2d = tf.reshape(data_tensor, [-1,image_dim[2],image_dim[3],1])
+tf.summary.image('input',data_tensor_2d,10)
 
-#RESHAPE IMAGE IF NEED BE                                                     
-x_image = tf.reshape(x, [-1,image_dim[2],image_dim[3],1])
-tf.summary.image('input',x_image,10)
-
-#BUILD NETWORK
+# Call network build function (then we add more train-specific layers)
 net = None
-cmd = 'net=toy_%s.build(x_image,cfg.NUM_CLASS)' % cfg.ARCHITECTURE
+cmd = 'from toynet import toy_%s;net=toy_%s.build(data_tensor_2d,cfg.NUM_CLASS)' % (cfg.ARCHITECTURE,cfg.ARCHITECTURE)
 exec(cmd)
 
-
-#SIGMOID
-with tf.name_scope('sigmoid'):
-  sigmoid = tf.nn.sigmoid(net)
-
-#CROSS-ENTROPY                                                                
-with tf.name_scope('cross_entropy'):
-  cross_entropy = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=y_, logits=net))
-  tf.summary.scalar('cross_entropy',cross_entropy)
-
-#TRAINING (RMS OR ADAM-OPTIMIZER OPTIONAL)                                    
-with tf.name_scope('train'):
-  train_step = tf.train.RMSPropOptimizer(0.0003).minimize(cross_entropy)
-
-#ACCURACY                                                                     
+# Define accuracy
 with tf.name_scope('accuracy'):
-#  correct_prediction = tf.equal(tf.argmax(net,1), tf.argmax(y_,1))
-#  accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-
-  correct_prediction = tf.equal(tf.rint(sigmoid), tf.rint(y_))
+  sigmoid = tf.nn.sigmoid(net)
+  correct_prediction = tf.equal(tf.rint(sigmoid), tf.rint(label_tensor))
   accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
   tf.summary.scalar('accuracy', accuracy)
 
-if cfg.TRAIN_SAVE is True:
-  a=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
-  saver=tf.train.Saver(var_list=a)
-  sess.run(tf.global_variables_initializer())
-  save_path = saver.save(sess,'%s' % (cfg.ARCHITECTURE) + 'train')
-  print 'saved @',save_path
-sess.run(tf.global_variables_initializer())
+# Define loss + backprop as training step
+with tf.name_scope('train'):
+  cross_entropy = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=label_tensor, logits=net))
+  tf.summary.scalar('cross_entropy',cross_entropy)
+  train_step = tf.train.RMSPropOptimizer(0.0003).minimize(cross_entropy)  
 
-#MERGE SUMMARIES FOR TENSORBOARD                                              
+#
+# 2) Configure global process (session, summary, etc.)
+#
+# Create a bandle of summary
 merged_summary=tf.summary.merge_all()
-
-#save=tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)
-#save.restore(sess,tf.train.latest_checkpoint('./'))
-
-
-##WRITE SUMMARIES TO LOG DIRECTORY LOGS6                                       
+# Create a session
+sess = tf.InteractiveSession()
+# Initialize variables
+sess.run(tf.global_variables_initializer())
+# Create a summary writer handle
 writer=tf.summary.FileWriter(cfg.LOGDIR)
 writer.add_graph(sess.graph)
+saver=tf.train.Saver()
+# Override variables if wished
+if cfg.LOAD_FILE:
+  vlist=[]
+  avoid_params=cfg.AVOID_LOAD_PARAMS.split(',')
+  for v in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES):
+    if v.name in avoid_params:
+      print '\033[91mSkipping\033[00m loading variable',v.name,'from input weight...'
+      continue
+    print '\033[95mLoading\033[00m variable',v.name,'from',cfg.LOAD_FILE
+    vlist.append(v)
+  reader=tf.train.Saver(var_list=vlist)
+  reader.restore(sess,cfg.LOAD_FILE)
+  
+# Run training loop
+for i in range(cfg.ITERATIONS):
 
-#TRAINING                                                                     ii
-for i in range(cfg.TRAIN_ITERATIONS):
-
+  # Receive data (this will hang if IO thread is still running = this will wait for thread to finish & receive data)
   data,label = proc.next()
-  proc.read_next(cfg.TRAIN_BATCH_SIZE)
+  # Start IO thread for the next batch while we train the network
+  proc.read_next(cfg.BATCH_SIZE)
+  # Run loss & train step
+  loss,acc,_ = sess.run([cross_entropy,accuracy,train_step],feed_dict={data_tensor: data, label_tensor: label})
 
-  loss,_ = sess.run([cross_entropy,train_step],feed_dict={x: data, y_: label})
-
-  sys.stdout.write('Training in progress @ step %d loss %g\r' % (i,loss))
+  sys.stdout.write('Training in progress @ step %d loss %g accuracy %g\r' % (i,loss,acc))
   sys.stdout.flush()
 
+  # Debug mode will dump images
   if cfg.DEBUG:
     for idx in xrange(len(data)):
-      img = None
-      img = data[idx].reshape(image_dim[2],image_dim[3])
+      img = None 
+      img = data[idx].reshape([image_dim[2],image_dim[3]])
       
       adcpng = plt.imshow(img)
-      imgname = 'debug_class_'
-      for v in label[idx]:
-        imgname += str(v)
-      imgname += '_entry_%04d.png' % (i*cfg.TRAIN_ITERATIONS+idx)
+      imgname = 'debug_class_%d_entry_%04d.png' % (np.argmax(label[idx]),i*cfg.ITERATIONS+idx)
       if os.path.isfile(imgname): raise Exception
       adcpng.write_png(imgname)
       plt.close()
 
-      print '%-3d' % (i*cfg.TRAIN_ITERATIONS+idx),'...',
+      print '%-3d' % (i*cfg.ITERATIONS+idx),'...',
       print 'shape',img.shape,
       print img.min(),'=>', img.max(),'...',
       print img.mean(),'+/-',img.std(),'...',
       print 'max loc @',np.unravel_index(img.argmax(),img.shape),'...',
       print imgname
-  
-  if (i+1)%50 == 0:
-    
-    s = sess.run(merged_summary, feed_dict={x:data, y_:label})
+
+  # If configured to save summary + snapshot, do so here.
+  if (i+1)%cfg.SAVE_ITERATION == 0:
+    # Run summary
+    s = sess.run(merged_summary, feed_dict={data_tensor:data, label_tensor:label})
     writer.add_summary(s,i)
-  
-    train_accuracy = sess.run(accuracy,feed_dict={x:data, y_: label})
-    print
-    print("step %d, training accuracy %g"%(i, train_accuracy))
-
-  if (i+1)%200 == 0:
-    q=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
-    saver=tf.train.Saver(var_list=q)
-    sess.run(tf.global_variables_initializer())
-    ssf_path = saver.save(sess,'%s_step%06d' % (cfg.ARCHITECTURE + 'ana',i))
+    # Save snapshot
+    ssf_path = saver.save(sess,cfg.ARCHITECTURE,global_step=i)
     print 'saved @',ssf_path
-    save_path = saver.save(sess,'%s_step%06d' % (cfg.ARCHITECTURE,i))
-    print 'saved @',save_path
-
-  if (i+1)%200 == 0:
-    q=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
-    saver=tf.train.Saver(var_list=q)
-    sess.run(tf.global_variables_initializer())
-    ssf_path = saver.save(sess,'%s_step%06d' % (cfg.ARCHITECTURE + 'ana',i))
-    print 'saved @',ssf_path
-
-#  if i%1000 ==0:
-#    batchtest = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG,multiplicities=False)
-#    test_accuracy = accuracy.eval(feed_dict={x:batchtest[0], y_:batchtest[1]})
-#    print("step %d, test accuracy %g"%(i, test_accuracy))
 
 # post training test
 data,label = proc.next()
-proc.read_next(cfg.TEST_BATCH_SIZE)
+proc.read_next(cfg.BATCH_SIZE)
 data,label = proc.next()
-sess.run(accuracy,feed_dict={x:data,y_:label})
-
-
-
-
-print("Final test accuracy %g"%accuracy.eval(feed_dict={x: data, y_: label}))
+print("Final test accuracy %g"%accuracy.eval(feed_dict={data_tensor: data, label_tensor: label}))
 
 # inform log directory
 print('Run `tensorboard --logdir=%s` in terminal to see the results.' % cfg.LOGDIR)

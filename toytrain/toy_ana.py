@@ -1,13 +1,17 @@
 #IMPORT NECESSARY PACKAGES
 import os,sys
-from toy_config import toy_config
+from toy_config import config
 #
 # Define constants
 #
-cfg = toy_config()
+cfg = config()
 if not cfg.parse(sys.argv):
   print '[ERROR] Configuraion failure!'
   print 'Exiting...'
+  sys.exit(1)
+
+if not cfg.LOAD_FILE:
+  print '[ERROR] Analysis requires LOAD_FILE...'
   sys.exit(1)
 
 # Check if log directory already exists
@@ -31,7 +35,6 @@ if os.path.isdir(cfg.LOGDIR):
 # Check if chosen network is available
 try:
   cmd = 'from toynet import toy_%s' % cfg.ARCHITECTURE
-  print cmd
   exec(cmd)
 except Exception:
   print 'Architecture',cfg.ARCHITECTURE,'is not available...'
@@ -50,16 +53,16 @@ from toydata import make_classification_images as make_images
 sess = tf.InteractiveSession()
 
 #PLACEHOLDERS                                                                 
-x = tf.placeholder(tf.float32,  [None, 784],name='x')
-y_ = tf.placeholder(tf.float32, [None, cfg.NUM_CLASS],name='labels')
+data_tensor    = tf.placeholder(tf.float32,  [None, 784],name='x')
+data_tensor_2d = tf.reshape(data_tensor,[-1,28,28,1])
+label_tensor   = tf.placeholder(tf.float32, [None, cfg.NUM_CLASS],name='labels')
 
 #RESHAPE IMAGE IF NEED BE                                                     
-x_image = tf.reshape(x, [-1,28,28,1])
-tf.summary.image('input',x_image,10)
+tf.summary.image('input',data_tensor_2d,10)
 
 #BUILD NETWORK
 net = None
-cmd = 'net=toy_%s.build(x_image,cfg.NUM_CLASS)' % cfg.ARCHITECTURE
+cmd = 'net=toy_%s.build(data_tensor_2d,cfg.NUM_CLASS)' % cfg.ARCHITECTURE
 exec(cmd)
 
 #SOFTMAX
@@ -68,7 +71,7 @@ with tf.name_scope('softmax'):
 
 #ACCURACY                                                                     
 with tf.name_scope('accuracy'):
-  correct_prediction = tf.equal(tf.argmax(net,1), tf.argmax(y_,1))
+  correct_prediction = tf.equal(tf.argmax(net,1), tf.argmax(label_tensor,1))
   accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
   tf.summary.scalar('accuracy', accuracy)
 
@@ -82,19 +85,8 @@ writer.add_graph(sess.graph)
 sess.run(tf.global_variables_initializer())
 
 saver= tf.train.Saver()
-saver = tf.train.import_meta_graph('%s.meta' % cfg.ANA_FILE)
+saver = tf.train.import_meta_graph('%s.meta' % cfg.LOAD_FILE)
 saver.restore(sess,tf.train.latest_checkpoint('./'))
-
-# post training test
-batch = make_images(cfg.TEST_BATCH_SIZE,debug=cfg.DEBUG,multiplicities=False)
-print("Final test accuracy %g"%accuracy.eval(feed_dict={x: batch[0], y_: batch[1]}))
-
-# inform log directory
-print('Run `tensorboard --logdir=%s` in terminal to see the results.' % cfg.LOGDIR)
-
-# do analysis, if specified
-if not cfg.ANA_BATCH_SIZE:
-  sys.exit(0)
 
 #
 # Run analysis using the trained network
@@ -109,8 +101,8 @@ fout.write('\n')
 
 # run analysis
 from matplotlib import pyplot as plt
-batch    = make_images(cfg.ANA_BATCH_SIZE,debug=cfg.DEBUG)
-score_vv = softmax.eval(feed_dict={x: batch[0]})
+batch    = make_images(cfg.BATCH_SIZE,debug=cfg.DEBUG)
+score_vv = softmax.eval(feed_dict={data_tensor: batch[0]})
 for entry,score_v in enumerate(score_vv):
   label = int(np.argmax(batch[1][entry]))
   prediction = int(np.argmax(score_v))
@@ -126,3 +118,4 @@ for entry,score_v in enumerate(score_vv):
     plt.close()
 
 fout.close()
+
