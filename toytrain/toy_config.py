@@ -48,7 +48,9 @@ class config:
 
     def check_log(self):
         # Check if log directory already exists
-        if not os.path.isdir(self.LOGDIR): return True
+        if not os.path.isdir(self.LOGDIR): 
+            os.mkdir(self.LOGDIR)
+            return os.path.isdir(self.LOGDIR)
 
         print '[WARNING] Log directory already present:',self.LOGDIR
         user_input=None
