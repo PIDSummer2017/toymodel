@@ -57,7 +57,7 @@ class toy_config:
                 elif argv.startswith('ana_file='):
                     self.ANA_FILE = argv.replace('ana_file=','')
                 elif argv.startswith('load_file='):
-                    self.LOAD_FILE = argv.replace('load_file=','')
+                    self.LOAD_FILE = argv.startswith('load_file=')
                 elif argv.startswith('ana_save='):
                     self.SAVE_FILE = argv.replace('ana_save=','')
                 elif argv.startswith('train_save='):

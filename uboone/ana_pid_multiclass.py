@@ -87,7 +87,7 @@ saver.restore(sess,tf.train.latest_checkpoint(''))
 
 fout = open('%s/analysis.csv' % cfg.LOGDIR,'w')
 fout.write('entry,label0, label1, label2, label3, label4')
-for idx in xrange(cfg.NUM_CLASS):
+for idx in xrange(cfg.ANA_BATCH_SIZE):
   fout.write(',score%02d' % idx)
 fout.write('\n')
 
