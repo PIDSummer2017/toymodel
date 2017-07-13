@@ -99,6 +99,7 @@ fout = open('%s/analysis.csv' % cfg.LOGDIR,'w')
 fout.write('entry,label')
 for idx in xrange(cfg.NUM_CLASS):
   fout.write(',score%02d' % idx)
+fout.write(',prediction')
 fout.write('\n')
   
 # Run analysis loop
@@ -118,6 +119,7 @@ for i in range(cfg.ITERATIONS):
     fout.write(',%d' % (label[entry]))
     for score in score_v:
       fout.write(',%g' % score)
+    fout.write(',%g' % np.argmax(score_v))
     fout.write('\n')
 fout.close()
 print
