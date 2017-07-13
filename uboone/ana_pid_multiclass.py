@@ -88,7 +88,9 @@ for idx in xrange(cfg.NUM_CLASS):
 fout.write('\n')  
 # Run training loop
 for i in range(cfg.ITERATIONS):
-
+  # Report the progress
+  sys.stdout.write('Processing %d/%d\r' % (i,cfg.ITERATIONS))
+  sys.stdout.flush()
   # Receive data (this will hang if IO thread is still running = this will wait for thread to finish & receive data)
   data,label = proc.next()
   # Start IO thread for the next batch while we train the network
@@ -105,3 +107,6 @@ for i in range(cfg.ITERATIONS):
       fout.write(',%g' % score)
     fout.write('\n')
 fout.close()
+print
+print 'Done'
+proc.reset()

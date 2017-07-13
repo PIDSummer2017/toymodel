@@ -97,6 +97,8 @@ sess.run(tf.global_variables_initializer())
 # Create a summary writer handle
 writer=tf.summary.FileWriter(cfg.LOGDIR)
 writer.add_graph(sess.graph)
+# Create weights saver
+saver = tf.train.Saver()
 # Override variables if wished
 if cfg.LOAD_FILE:
   vlist=[]
@@ -108,7 +110,7 @@ if cfg.LOAD_FILE:
     print '\033[95mLoading\033[00m variable',v.name,'from',cfg.LOAD_FILE
     vlist.append(v)
   reader=tf.train.Saver(var_list=vlist)
-  reader.restore(sess,tf.train.latest_checkpoint('./'))
+  reader.restore(sess,cfg.LOAD_FILE)
   
 # Run training loop
 for i in range(cfg.ITERATIONS):
@@ -150,7 +152,7 @@ for i in range(cfg.ITERATIONS):
     s = sess.run(merged_summary, feed_dict={data_tensor:data, label_tensor:label})
     writer.add_summary(s,i)
     # Save snapshot
-    ssf_path = saver.save(sess,cfg.ARCHITECTURE,global_iteration=i)
+    ssf_path = saver.save(sess,cfg.ARCHITECTURE,global_step=i)
     print 'saved @',ssf_path
 
 # post training test
