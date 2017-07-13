@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #IMPORT NECESSARY PACKAGES
 import os,sys,time
 from toytrain import toy_config
@@ -106,7 +105,7 @@ fout.write('\n')
  
  
 
-Basic imports
+#Basic imports
 import os,sys,time
 from toytrain import config
 
