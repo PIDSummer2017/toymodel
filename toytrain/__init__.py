@@ -1,1 +1,1 @@
-from toy_config import toy_config
+from toy_config import config

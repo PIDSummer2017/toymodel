@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, toynet
 
 class config:
 
@@ -11,7 +11,8 @@ class config:
         self.LOGDIR         = 'logs'
         self.ARCHITECTURE   = 'lenet'
         self.LOAD_FILE      = ''
-    
+        self.AVOID_LOAD_PARAMS = ''
+
     def parse(self,argv_v):
 
         cfg_file=None
@@ -38,30 +39,48 @@ class config:
                     self.LOAD_FILE = argv.replace('load_file=','')
                 elif argv.startswith('save_iteration='):
                     self.SAVE_ITERATION = int(argv.replace('save_iteration=','') )
- 
+                elif argv.startswith('avoid_params='):
+                    self.AVOID_LOAD_PARAMS = argv.replace('avoid_params=','')
             except Exception:
                 print 'argument:',argv,'not in a valid format (parsing failed!)'
                 return False
         return True
+
     def check_log(self):
         # Check if log directory already exists
-        if os.path.isdir(self.LOGDIR):
-            print '[WARNING] Log directory already present:',self.LOGDIR
-            user_input=None
-            while user_input is None:
-                sys.stdout.write('Remove and proceed? [y/n]:')
-                sys.stdout.flush()
-                user_input = sys.stdin.readline().rstrip('\n')
-                if not user_input.lower() in ['y','n','yes','no']:
-                    print 'Unsupported answer:',user_input
-                    user_input=None
-                    continue
-                if user_input in ['n','no']:
-                    print 'Exiting...'
-                    return False
-                else:
-                    os.system('rm -rf %s' % self.LOGDIR)
-                    return True
+        if not os.path.isdir(self.LOGDIR): return True
+
+        print '[WARNING] Log directory already present:',self.LOGDIR
+        user_input=None
+        while user_input is None:
+            sys.stdout.write('Remove and proceed? [y/n]:')
+            sys.stdout.flush()
+            user_input = sys.stdin.readline().rstrip('\n')
+            if not user_input.lower() in ['y','n','yes','no']:
+                print 'Unsupported answer:',user_input
+                user_input=None
+                continue
+            if user_input in ['n','no']:
+                print 'Exiting...'
+                return False
+            else:
+                os.system('rm -rf %s' % self.LOGDIR)
+                return True
+
+    def sanity_check(self):
+        # log directory duplication
+        if not self.check_log():
+            return False
+
+        # network availability
+        try:
+            cmd = 'from toynet import toy_%s' % self.ARCHITECTURE
+            exec(cmd)
+        except Exception:
+            print 'Architecture',self.ARCHITECTURE,'is not available...'
+            return False
+
+        return True
         
     def __str__(self):
         msg  = 'Configuration parameters:\n'
@@ -73,6 +92,7 @@ class config:
         msg += '    debug mode         = %d\n' % self.DEBUG
         msg += '    load file?         = %s\n' % self.LOAD_FILE
         msg += '    save per iteration = %s\n' % self.SAVE_ITERATION
+        msg += '    avoid params       = %s\n' % self.AVOID_LOAD_PARAMS
         return msg
 
 if __name__ == '__main__':

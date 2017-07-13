@@ -5,21 +5,8 @@ from toy_config import config
 # Define constants
 #
 cfg = config()
-if not cfg.parse(sys.argv):
-  print '[ERROR] Configuraion failure!'
+if not cfg.parse(sys.argv) or not cfg.sanity_check():
   print 'Exiting...'
-  sys.exit(1)
-
-# Check if log directory already exists
-if not cfg.check_log():
-  sys.exit(1)
-
-# Check if chosen network is available
-try:
-  cmd = 'from toynet import toy_%s' % cfg.ARCHITECTURE
-  exec(cmd)
-except Exception:
-  print 'Architecture',cfg.ARCHITECTURE,'is not available...'
   sys.exit(1)
 
 # Print configuration
@@ -44,7 +31,7 @@ tf.summary.image('input',data_tensor_2d,10)
 
 #BUILD NETWORK
 net = None
-cmd = 'net=toy_%s.build(data_tensor_2d,cfg.NUM_CLASS)' % cfg.ARCHITECTURE
+cmd = 'import toy_%s;net=toy_%s.build(data_tensor_2d,cfg.NUM_CLASS)' % (cfg.ARCHITECTURE,cfg.ARCHITECTURE)
 exec(cmd)
 
 #SOFTMAX
