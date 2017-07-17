@@ -47,11 +47,11 @@ def get_truth_info(roi_chain,entry):
     res.multi_v[index] += 1
     energy -= mass[index]
     res.energy_sum += energy
-    if res.max_energy_v[index] < energy:
+    if res.max_energy_v[index] < 0 or res.max_energy_v[index] < energy:
       res.max_energy_v[index] = energy
-    if res.min_energy_v[index] > energy:
+      res.dcosz_v[index] = roi.Pz() / np.sqrt(np.power(roi.Px(),2) + np.power(roi.Py(),2) +np.power(roi.Pz(),2))
+    if res.min_energy_v[index] < 0 or res.min_energy_v[index] > energy:
       res.min_energy_v[index] = energy
-    res.dcosz_v[index] = roi.Pz() / np.sqrt(np.power(roi.Px(),2) + np.power(roi.Py(),2) +np.power(roi.Pz(),2))
 
   for v in res.multi_v:
     res.multi_sum += v
@@ -164,7 +164,7 @@ def main():
   for idx in xrange(cfg.NUM_CLASS):
     fout.write(',min_energy%02d' % idx)
   for idx in xrange(cfg.NUM_CLASS):
-    fout.write(',dcos%02d' % idx)
+    fout.write(',dcosz%02d' % idx)
   fout.write(',multi_all,multi_neutron,multi_sum,energy_sum,open_angle')
   fout.write('\n')
 
@@ -191,7 +191,7 @@ def main():
         fout.write(',%g' % v)
       for v in mcinfo.min_energy_v:
         fout.write(',%g' % v)
-      for f in mcinfo.dcosz_v:
+      for v in mcinfo.dcosz_v:
         fout.write(',%g' % v)
       fout.write(',%d' % mcinfo.multi_all)
       fout.write(',%d' % mcinfo.multi_neutron)
