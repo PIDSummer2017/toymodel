@@ -179,8 +179,6 @@ def main():
     processed_entries = filler.processed_entries()
     for entry in xrange(processed_entries.size()):
       entry_number_v[entry] = processed_entries[entry]
-    # Start IO thread for the next batch while we train the network
-    proc.read_next(cfg.BATCH_SIZE)
     # Run loss & train step
     score_vv = sess.run(sigmoid,feed_dict={data_tensor: data})
     for res_idx,score_v in enumerate(score_vv):
@@ -204,6 +202,9 @@ def main():
       fout.write(',%g' % mcinfo.energy_sum)
       fout.write(',%g' % mcinfo.open_angle)
       fout.write('\n')
+    # Start IO thread for the next batch 
+    proc.read_next(cfg.BATCH_SIZE)
+
   fout.close()
   print
   print 'Done'
