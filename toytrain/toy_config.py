@@ -12,14 +12,13 @@ class config:
         self.ARCHITECTURE   = 'lenet'
         self.LOAD_FILE      = ''
         self.AVOID_LOAD_PARAMS = ''
-
+        self.FILLER_CONFIG = ''
     def parse(self,argv_v):
 
         cfg_file=None
-        for argv in argv_v:
-            if argv.endswith('.cfg'):
-                params=open(argv,'r').read().split()
-                return self.parse(params)
+        if len(argv_v) == 2 and argv_v[1].endswith('.cfg'):
+            params=open(argv_v[1],'r').read().split()
+            return self.parse(params)
 
         for argv in argv_v:
             try:
@@ -41,6 +40,8 @@ class config:
                     self.SAVE_ITERATION = int(argv.replace('save_iteration=','') )
                 elif argv.startswith('avoid_params='):
                     self.AVOID_LOAD_PARAMS = argv.replace('avoid_params=','')
+                elif argv.startswith('filler='):
+                    self.FILLER_CONFIG = argv.replace('filler=','')
             except Exception:
                 print 'argument:',argv,'not in a valid format (parsing failed!)'
                 return False
@@ -49,6 +50,7 @@ class config:
     def check_log(self):
         # Check if log directory already exists
         if not os.path.isdir(self.LOGDIR): 
+            print '[NOTICE] Creating a log directory:',self.LOGDIR
             os.mkdir(self.LOGDIR)
             return os.path.isdir(self.LOGDIR)
 
@@ -67,13 +69,20 @@ class config:
                 return False
             else:
                 os.system('rm -rf %s' % self.LOGDIR)
+                os.mkdir(self.LOGDIR)
                 return True
 
     def sanity_check(self):
         # log directory duplication
         if not self.check_log():
             return False
-
+        # filler check
+        if self.FILLER_CONFIG:
+            if not os.path.isfile(self.FILLER_CONFIG):
+                self.FILLER_CONFIG = '%s/uboone/%s' % (os.environ['TOYMODEL_DIR'],self.FILLER_CONFIG)
+                if not os.path.isfile(self.FILLER_CONFIG):
+                    print 'LArCV data filler config file does not exist!'
+                    return False
         # network availability
         try:
             cmd = 'from toynet import toy_%s' % self.ARCHITECTURE

@@ -43,10 +43,13 @@ def convert_label(input_label,num_class):
 #
 
 # Instantiate and configure
+if not cfg.FILLER_CONFIG:
+  'Must provide larcv data filler configuration file!'
+  sys.exit(1)
 proc = larcv_data()
 filler_cfg = {'filler_name': 'DataFiller', 
               'verbosity':0, 
-              'filler_cfg':'%s/uboone/oneclass_filler.cfg' % os.environ['TOYMODEL_DIR']}
+              'filler_cfg':cfg.FILLER_CONFIG}
 proc.configure(filler_cfg)
 # Spin IO thread first to read in a batch of image (this loads image dimension to the IO python interface)
 proc.read_next(cfg.BATCH_SIZE)
