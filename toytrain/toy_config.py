@@ -16,10 +16,9 @@ class config:
     def parse(self,argv_v):
 
         cfg_file=None
-        for argv in argv_v:
-            if argv.endswith('.cfg'):
-                params=open(argv,'r').read().split()
-                return self.parse(params)
+        if len(argv_v) == 2 and argv_v[1].endswith('.cfg'):
+            params=open(argv_v[1],'r').read().split()
+            return self.parse(params)
 
         for argv in argv_v:
             try:

@@ -42,7 +42,7 @@ if not cfg.FILLER_CONFIG:
   sys.exit(1)
 proc = larcv_data()
 filler_cfg = {'filler_name': 'DataFiller', 
-              'verbosity':2, 
+              'verbosity':0, 
               'filler_cfg':cfg.FILLER_CONFIG}
 proc.configure(filler_cfg)
 # Spin IO thread first to read in a batch of image (this loads image dimension to the IO python interface)

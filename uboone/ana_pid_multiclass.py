@@ -100,7 +100,7 @@ def main():
     sys.exit(1)
   proc = larcv_data()
   filler_cfg = {'filler_name': 'DataFiller', 
-                'verbosity':2, 
+                'verbosity':0, 
                 'filler_cfg':cfg.FILLER_CONFIG}
   proc.configure(filler_cfg)
   # Spin IO thread first to read in a batch of image (this loads image dimension to the IO python interface)
@@ -153,8 +153,8 @@ def main():
   reader=tf.train.Saver()
   reader.restore(sess,cfg.LOAD_FILE)
   # Analysis csv file
-  weight_file_name = csv.LOAD_FILE.split('/')[-1]
-  filler_file_name = csv.FILLER_FILE.split('/')[-1].replace('.cfg','')
+  weight_file_name = cfg.LOAD_FILE.split('/')[-1]
+  filler_file_name = cfg.FILLER_CONFIG.split('/')[-1].replace('.cfg','')
   fout = open('%s.%s.csv' % (weight_file_name,filler_file_name),'w')
   fout.write('entry,label0, label1, label2, label3, label4')
   for idx in xrange(cfg.NUM_CLASS):
@@ -182,23 +182,23 @@ def main():
     for entry,score_v in enumerate(score_vv):
       fout.write('%d' % (entry + i * cfg.BATCH_SIZE))
 
-    mcinfo = get_truth_info(roi_chain, (entry + i * cfg.BATCH_SIZE))
-    for v in mcinfo.multi_v:
-      fout.write(',%d' % int(v))
-    for score in score_v:
-      fout.write(',%g' % score)
-    for v in mcinfo.max_energy_v:
-      fout.write(',%g' % v)
-    for v in mcinfo.min_energy_v:
-      fout.write(',%g' % v)
-    for f in mcinfo.dcosz_v:
-      fout.write(',%g' % v)
-    fout.write(',%d' % mcinfo.multi_all)
-    fout.write(',%d' % mcinfo.multi_neutron)
-    fout.write(',%d' % mcinfo.multi_sum)
-    fout.write(',%g' % mcinfo.energy_sum)
-    fout.write(',%g' % mcinfo.open_angle)
-    fout.write('\n')
+      mcinfo = get_truth_info(roi_chain, (entry + i * cfg.BATCH_SIZE))
+      for v in mcinfo.multi_v:
+        fout.write(',%d' % int(v))
+      for score in score_v:
+        fout.write(',%g' % score)
+      for v in mcinfo.max_energy_v:
+        fout.write(',%g' % v)
+      for v in mcinfo.min_energy_v:
+        fout.write(',%g' % v)
+      for f in mcinfo.dcosz_v:
+        fout.write(',%g' % v)
+      fout.write(',%d' % mcinfo.multi_all)
+      fout.write(',%d' % mcinfo.multi_neutron)
+      fout.write(',%d' % mcinfo.multi_sum)
+      fout.write(',%g' % mcinfo.energy_sum)
+      fout.write(',%g' % mcinfo.open_angle)
+      fout.write('\n')
   fout.close()
   print
   print 'Done'
