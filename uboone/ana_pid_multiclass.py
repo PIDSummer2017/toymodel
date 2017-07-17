@@ -171,8 +171,8 @@ def main():
   # Run training loop
   for i in range(cfg.ITERATIONS):
     # Report the progress
-    sys.stdout.write('Processing %d/%d\r' % (i,cfg.ITERATIONS))
-    sys.stdout.flush()
+    #sys.stdout.write('Processing %d/%d\r' % (i,cfg.ITERATIONS))
+    #sys.stdout.flush()
     # Receive data (this will hang if IO thread is still running = this will wait for thread to finish & receive data)
     data,label = proc.next()
     # Start IO thread for the next batch while we train the network
@@ -180,8 +180,7 @@ def main():
     # Run loss & train step
     score_vv = sess.run(sigmoid,feed_dict={data_tensor: data})
     for entry,score_v in enumerate(score_vv):
-      fout.write('%d' % (entry + i * cfg.BATCH_SIZE))
-
+      fout.write('%d' % (entry + i * cfg.BATCH_SIZE)
       mcinfo = get_truth_info(roi_chain, (entry + i * cfg.BATCH_SIZE))
       for v in mcinfo.multi_v:
         fout.write(',%d' % int(v))
