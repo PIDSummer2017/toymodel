@@ -172,8 +172,8 @@ def main():
   entry_number_v = [0] * cfg.BATCH_SIZE
   for i in range(cfg.ITERATIONS):
     # Report the progress
-    #sys.stdout.write('Processing %d/%d\r' % (i,cfg.ITERATIONS))
-    #sys.stdout.flush()
+    sys.stdout.write('Processing %d/%d\r' % (i,cfg.ITERATIONS))
+    sys.stdout.flush()
     # Receive data (this will hang if IO thread is still running = this will wait for thread to finish & receive data)
     data,label = proc.next()
     processed_entries = filler.processed_entries()
