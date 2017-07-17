@@ -181,6 +181,7 @@ def main():
       entry_number_v[entry] = processed_entries[entry]
     # Run loss & train step
     score_vv = sess.run(sigmoid,feed_dict={data_tensor: data})
+                
     for res_idx,score_v in enumerate(score_vv):
       entry = entry_number_v[res_idx]
       fout.write('%d' % entry)
