@@ -169,19 +169,26 @@ def main():
   fout.write('\n')
 
   # Run training loop
+  entry_number_v = [0] * cfg.BATCH_SIZE
   for i in range(cfg.ITERATIONS):
     # Report the progress
     #sys.stdout.write('Processing %d/%d\r' % (i,cfg.ITERATIONS))
     #sys.stdout.flush()
     # Receive data (this will hang if IO thread is still running = this will wait for thread to finish & receive data)
     data,label = proc.next()
+    processed_entries = filler.processed_entries()
+    for entry in xrange(processed_entries.size()):
+      entry_number_v[entry] = processed_entries[entry]
     # Start IO thread for the next batch while we train the network
     proc.read_next(cfg.BATCH_SIZE)
     # Run loss & train step
     score_vv = sess.run(sigmoid,feed_dict={data_tensor: data})
-    for entry,score_v in enumerate(score_vv):
-      fout.write('%d' % (entry + i * cfg.BATCH_SIZE)
-      mcinfo = get_truth_info(roi_chain, (entry + i * cfg.BATCH_SIZE))
+                
+    for res_idx,score_v in enumerate(score_vv):
+      entry = entry_number_v[res_idx]
+      fout.write('%d' % entry)
+
+      mcinfo = get_truth_info(roi_chain, entry)
       for v in mcinfo.multi_v:
         fout.write(',%d' % int(v))
       for score in score_v:
