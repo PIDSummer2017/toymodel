@@ -34,7 +34,8 @@ xlim = (np.min(nz_pixels[1])-20,np.max(nz_pixels[1])+20)
 
 fig,ax=plt.subplots(figsize=(12,8),facecolor='w')
 img=plt.imshow(adcimg,cmap='jet',vmin=0,vmax=400,interpolation=None)
-ax.set_ylim(*ylim)
-ax.set_xlim(*xlim)
+if zoom:
+    ax.set_ylim(*ylim)
+    ax.set_xlim(*xlim)
 img.write_png('Entry%05d.png' % entry)
 plt.close()
