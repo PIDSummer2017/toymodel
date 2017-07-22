@@ -33,7 +33,7 @@ ylim = (np.min(nz_pixels[0])-20,np.max(nz_pixels[0])+20)
 xlim = (np.min(nz_pixels[1])-20,np.max(nz_pixels[1])+20)
 
 fig,ax=plt.subplots(figsize=(12,8),facecolor='w')
-img=plt.imshow(adcimg,cmap='jet',vmin=0,vmax=400,interpolation=None)
+img=plt.imshow(adcimg,cmap='jet',vmin=0,vmax=300,interpolation=None)
 if zoom:
     ax.set_ylim(*ylim)
     ax.set_xlim(*xlim)
