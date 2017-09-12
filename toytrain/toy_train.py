@@ -13,7 +13,6 @@ if not cfg.parse(sys.argv) or not cfg.sanity_check():
 print cfg
 
 # ready to import heavy packages
-from toynet import toy_lenet
 import numpy as np
 import tensorflow as tf
 from toydata import make_classification_images as make_images
@@ -31,7 +30,7 @@ tf.summary.image('input',data_tensor_2d,10)
 
 #BUILD NETWORK
 net = None
-cmd = 'import toy_%s;net=toy_%s.build(data_tensor_2d,cfg.NUM_CLASS)' % (cfg.ARCHITECTURE,cfg.ARCHITECTURE)
+cmd = 'from toynet import toy_%s;net=toy_%s.build(data_tensor_2d,cfg.NUM_CLASS)' % (cfg.ARCHITECTURE,cfg.ARCHITECTURE)
 exec(cmd)
 
 #SOFTMAX
@@ -90,7 +89,7 @@ for i in range(cfg.ITERATIONS):
     sess.run(train_step,feed_dict={data_tensor: batch[0], label_tensor: batch[1]})
 
     if i%1000 ==0:
-        batchtest = make_images(cfg.BATCH_SIZE,debug=cfg.DEBUG,multiplicities=False)
+        batchtest = make_images(cfg.BATCH_SIZE*10,debug=cfg.DEBUG,multiplicities=False)
         test_accuracy = sess.run(accuracy,feed_dict={data_tensor:batchtest[0], label_tensor:batchtest[1]})
         print("step %d, test accuracy %g"%(i, test_accuracy))
 
