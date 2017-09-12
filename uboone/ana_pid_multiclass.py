@@ -121,7 +121,7 @@ def main():
   roi_chain = TChain("partroi_segment_tree")
   for fname in filler.pd().io().file_list():
     roi_chain.AddFile(fname)
-  filler.set_next_index(0)
+  filler.set_next_index(5861)
   # Immediately start the thread for later IO
   proc.read_next(cfg.BATCH_SIZE)
 
@@ -205,12 +205,11 @@ def main():
       fout.write(',%g' % mcinfo.open_angle)
       fout.write('\n')
     # Start IO thread for the next batch 
-    proc.read_next(cfg.BATCH_SIZE)
 
+    proc.read_next(cfg.BATCH_SIZE)
   fout.close()
   print
   print 'Done'
-  proc.reset()
 
 if __name__ == '__main__':
   from choose_gpu import pick_gpu
