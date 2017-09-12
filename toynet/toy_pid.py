@@ -30,7 +30,7 @@ def build(input_tensor, num_class=4):
     net = L.conv2d(input_tensor=net, name='conv5_1', kernel=(3,3), stride=(1,1), num_filter=512, activation_fn=tf.nn.relu)
     net = L.conv2d(input_tensor=net, name='conv5_2', kernel=(3,3), stride=(1,1), num_filter=512, activation_fn=tf.nn.relu)
     # max pool
-    net = L.max_pool (input_tensor=net, name="pool4",   kernel=(3,3), stride=(2,2))
+    net = L.max_pool (input_tensor=net, name="pool5",   kernel=(3,3), stride=(2,2))
     # by here it's 9 x 9 x 512
     return L.final_inner_product(input_tensor=net, name='fc_final', num_output=num_class)
     #Final Array will be 41472 x 5 (9x9x512 and 5 classes)

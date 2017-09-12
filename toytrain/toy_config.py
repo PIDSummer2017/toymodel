@@ -47,6 +47,18 @@ class config:
                 return False
         return True
 
+    def ask_binary(self,comment):
+        user_input=None
+        while user_input is None:
+            sys.stdout.write('%s [y/n]:' % comment)
+            sys.stdout.flush()
+            user_input = sys.stdin.readline().rstrip('\n')
+            if not user_input.lower() in ['y','n','yes','no']:
+                print 'Unsupported answer:',user_input
+                user_input=None
+                continue
+            return user_input in ['y','yes']
+
     def check_log(self):
         # Check if log directory already exists
         if not os.path.isdir(self.LOGDIR): 
@@ -55,22 +67,12 @@ class config:
             return os.path.isdir(self.LOGDIR)
 
         print '[WARNING] Log directory already present:',self.LOGDIR
-        user_input=None
-        while user_input is None:
-            sys.stdout.write('Remove and proceed? [y/n]:')
-            sys.stdout.flush()
-            user_input = sys.stdin.readline().rstrip('\n')
-            if not user_input.lower() in ['y','n','yes','no']:
-                print 'Unsupported answer:',user_input
-                user_input=None
-                continue
-            if user_input in ['n','no']:
-                print 'Exiting...'
-                return False
-            else:
-                os.system('rm -rf %s' % self.LOGDIR)
-                os.mkdir(self.LOGDIR)
-                return True
+        rmdir = self.ask_binary('Remove and proceed?')
+        if rmdir:
+            os.system('rm -rf %s' % self.LOGDIR)
+            return True
+        else:
+            return self.ask_binary('Proceed anyway?')
 
     def sanity_check(self):
         # log directory duplication

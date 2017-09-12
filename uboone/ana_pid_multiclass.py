@@ -74,7 +74,7 @@ def main():
   cfg = config()
   if not cfg.parse(sys.argv) or not cfg.sanity_check():
     sys.exit(1)
-
+  
   # Print configuration
   print '\033[95mConfiguration\033[00m'
   print cfg
@@ -96,8 +96,9 @@ def main():
 
   # Instantiate and configure
   if not cfg.FILLER_CONFIG:
-    'Must provide larcv data filler configuration file!'
+    print 'Must provide larcv data filler configuration file!'
     sys.exit(1)
+
   proc = larcv_data()
   filler_cfg = {'filler_name': 'DataFiller', 
                 'verbosity':0, 
