@@ -10,9 +10,9 @@ class config:
         self.SAVE_ITERATION = 100
         self.LOGDIR         = 'logs'
         self.ARCHITECTURE   = 'lenet'
-        self.LOAD_FILE      = ''
+        self.LOAD_FILE      = '/data/drinkingkazu/summer2017/toymodel/train_multiclass2/pid-18199'
         self.AVOID_LOAD_PARAMS = ''
-        self.FILLER_CONFIG = ''
+        self.FILLER_CONFIG = 'multiclass_filler_1e1p_allE.cfg'
     def parse(self,argv_v):
 
         cfg_file=None
