@@ -163,7 +163,8 @@ for i in range(cfg.ITERATIONS):
     s = sess.run(merged_summary, feed_dict={data_tensor:data, label_tensor:label})
     writer.add_summary(s,i)
     # Save snapshot
-    ssf_path = saver.save(sess,cfg.ARCHITECTURE,global_step=i)
+    #ssf_path = saver.save(sess,cfg.ARCHITECTURE,global_step=i)
+    ssf_path = saver.save(sess,cfg.ARCHITECTURE,global_step=epoch_number)
     print 'saved @',ssf_path
 
 # post training test
