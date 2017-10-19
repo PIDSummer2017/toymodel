@@ -122,7 +122,7 @@ reader=tf.train.Saver()
 reader.restore(sess,cfg.LOAD_FILE)
 # Prepare output CSV file
 fout = open('%s/analysis.csv' % cfg.LOGDIR,'w')
-fout.write('entry, run, subrun, event, label')
+fout.write('entry,run,subrun,event,label')
 for idx in xrange(cfg.NUM_CLASS):
   fout.write(',score%02d' % idx)
 fout.write(',prediction')
