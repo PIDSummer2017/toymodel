@@ -13,7 +13,7 @@ class config:
         self.LOAD_FILE      = ''
         self.AVOID_LOAD_PARAMS = ''
         self.FILLER_CONFIG = ''
-        self.GPU_INDEX = 0
+        self.GPU_INDEX = 1
     def parse(self,argv_v):
 
         cfg_file=None
@@ -70,13 +70,17 @@ class config:
             return os.path.isdir(self.LOGDIR)
 
         print '[WARNING] Log directory already present:',self.LOGDIR
+        
+        os.system('rm -rf %s' % self.LOGDIR)                                                                                                                                       
+        return True
+        '''
         rmdir = self.ask_binary('Remove and proceed?')
         if rmdir:
             os.system('rm -rf %s' % self.LOGDIR)
             return True
         else:
             return self.ask_binary('Proceed anyway?')
-
+        '''
     def sanity_check(self):
         # log directory duplication
         if not self.check_log():

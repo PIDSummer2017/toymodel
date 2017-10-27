@@ -162,7 +162,7 @@ for i in range(cfg.ITERATIONS):
       fout.write(',%g' % score)
     fout.write(',%g' % np.argmax(score_v))
     fout.write('\n')
-
+  if(this_entry> roi_chain.GetEntries()): break;
 fout.close()
 print
 print 'Done'
