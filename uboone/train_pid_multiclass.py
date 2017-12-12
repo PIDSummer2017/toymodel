@@ -61,35 +61,37 @@ label_dim = proc.label_dim()
 #
 
 # Set input data and label for training
-with tf.device('/gpu:%i'%cfg.GPU_INDEX):
-  data_tensor    = tf.placeholder(tf.float32, [None, image_dim[2] * image_dim[3]],name='x')
-  label_tensor   = tf.placeholder(tf.float32, [None, cfg.NUM_CLASS],name='labels')
-  data_tensor_2d = tf.reshape(data_tensor, [-1,image_dim[2],image_dim[3],1])
-  tf.summary.image('input',data_tensor_2d,10)
+#with tf.device('/gpu:%i'%cfg.GPU_INDEX):
 
-  # Call network build function (then we add more train-specific layers)
-  net = None
-  cmd = 'from toynet import toy_%s;net=toy_%s.build(data_tensor_2d,cfg.NUM_CLASS)' % (cfg.ARCHITECTURE,cfg.ARCHITECTURE)
-  exec(cmd)
+data_tensor    = tf.placeholder(tf.float32, [None, image_dim[2] * image_dim[3]],name='x')
+label_tensor   = tf.placeholder(tf.float32, [None, cfg.NUM_CLASS],name='labels')
+data_tensor_2d = tf.reshape(data_tensor, [-1,image_dim[2],image_dim[3],1])
+tf.summary.image('input',data_tensor_2d,10)
 
-  # Define accuracy
-  with tf.name_scope('accuracy'):
-    sigmoid = tf.nn.sigmoid(net)
-    correct_prediction = tf.equal(tf.rint(sigmoid), tf.rint(label_tensor))
-    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-    tf.summary.scalar('accuracy', accuracy)
+# Call network build function (then we add more train-specific layers)
+net = None
+cmd = 'from toynet import toy_%s;net=toy_%s.build(data_tensor_2d,cfg.NUM_CLASS)' % (cfg.ARCHITECTURE,cfg.ARCHITECTURE)
+print 'cfg.ARCHITECTURE is ',cfg.ARCHITECTURE
+exec(cmd)
 
-    # Define loss + backprop as training step
-  with tf.name_scope('train'):
-    cross_entropy = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=label_tensor, logits=net))
-    tf.summary.scalar('cross_entropy',cross_entropy)
-    train_step = tf.train.RMSPropOptimizer(0.0003).minimize(cross_entropy)  
+# Define accuracy
+with tf.name_scope('accuracy'):
+  sigmoid = tf.nn.sigmoid(net)
+  correct_prediction = tf.equal(tf.rint(sigmoid), tf.rint(label_tensor))
+  accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+  tf.summary.scalar('accuracy', accuracy)
+    
+  # Define loss + backprop as training step
+with tf.name_scope('train'):
+  cross_entropy = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=label_tensor, logits=net))
+  tf.summary.scalar('cross_entropy',cross_entropy)
+  train_step = tf.train.RMSPropOptimizer(0.0003).minimize(cross_entropy)  
     
   #
   # 2) Configure global process (session, summary, etc.)
   #
   # Create a bandle of summary
-  merged_summary=tf.summary.merge_all()
+merged_summary=tf.summary.merge_all()
 # Create a session
 #sess = tf.InteractiveSession()
 sess = tf.InteractiveSession(config=tf.ConfigProto(log_device_placement=True))
@@ -154,7 +156,10 @@ for i in range(cfg.ITERATIONS):
     writer.add_summary(s,i)
     # Save snapshot
     #ssf_path = saver.save(sess,cfg.ARCHITECTURE,global_step=i)
-    ssf_path = saver.save(sess,cfg.ARCHITECTURE,global_step=epoch_number)
+    epoch_number = int(50.*i/24990)
+    print 'epoch_number is, ', epoch_number
+    save_path = os.path.join("plane%itraining"%cfg.PLANE)
+    ssf_path = saver.save(sess,save_path+'/'+cfg.ARCHITECTURE,global_step=epoch_number)
     print 'saved @',ssf_path
 
 # post training test

@@ -13,7 +13,8 @@ class config:
         self.LOAD_FILE      = ''
         self.AVOID_LOAD_PARAMS = ''
         self.FILLER_CONFIG = ''
-        self.GPU_INDEX = 1
+        self.GPU_INDEX = ''
+        self.PLANE = ''
     def parse(self,argv_v):
 
         cfg_file=None
@@ -45,6 +46,8 @@ class config:
                     self.FILLER_CONFIG = argv.replace('filler=','')
                 elif argv.startswith('gpu_index='):
                     self.GPU_INDEX = int(argv.replace('gpu_index=',''))
+                elif argv.startswith('plane='):
+                    self.PLANE = int(argv.replace('plane=',''))
             except Exception:
                 print 'argument:',argv,'not in a valid format (parsing failed!)'
                 return False
@@ -114,6 +117,7 @@ class config:
         msg += '    save per iteration = %s\n' % self.SAVE_ITERATION
         msg += '    avoid params       = %s\n' % self.AVOID_LOAD_PARAMS
         msg += '    gpu index          = %s\n' % self.GPU_INDEX
+        msg += '    plane              = %s\n' % self.PLANE
         return msg
 
 if __name__ == '__main__':
