@@ -117,7 +117,7 @@ def main():
   # Analysis csv file
   weight_file_name = cfg.LOAD_FILE.split('/')[-1]
   filler_file_name = cfg.FILLER_CONFIG.split('/')[-1].replace('.cfg','')
-  fout = open('%s.%s.csv' % (weight_file_name,filler_file_name),'w')
+  fout = open('%s.%s.plane%s.csv' % (weight_file_name,filler_file_name,cfg.PLANE),'w')
   fout.write('entry,run,subrun,event')
   for idx in xrange(cfg.NUM_CLASS):
     fout.write(',score%02d'%idx)
@@ -167,5 +167,6 @@ if __name__ == '__main__':
   if GPUID < 0:
     sys.stderr.write('No available GPU with memory %d\n' % GPUMEM)
     sys.exit(1)
-  with tf.device('/gpu:%d' % GPUID):
+  #with tf.device('/gpu:%d' % GPUID):
+  with tf.device('/cpu:0'):
     main()
