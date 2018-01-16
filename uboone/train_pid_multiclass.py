@@ -83,8 +83,11 @@ with tf.name_scope('accuracy'):
     
   # Define loss + backprop as training step
 with tf.name_scope('train'):
+  #cross_entropy = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=label_tensor, logits=net))
+  #precision, pre_op = tf.metrics.precision(labels=label_tensor, predictions=net)
   cross_entropy = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=label_tensor, logits=net))
   tf.summary.scalar('cross_entropy',cross_entropy)
+  #cross_entropy = tf.divide(tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=label_tensor, logits=net)), precision)
   train_step = tf.train.RMSPropOptimizer(0.0003).minimize(cross_entropy)  
     
   #
@@ -97,8 +100,11 @@ merged_summary=tf.summary.merge_all()
 sess = tf.InteractiveSession(config=tf.ConfigProto(log_device_placement=True))
 # Initialize variables
 sess.run(tf.global_variables_initializer())
+sess.run(tf.local_variables_initializer())
 # Create a summary writer handle
-writer=tf.summary.FileWriter(cfg.LOGDIR)
+log_path = cfg.LOGDIR+str(cfg.PLANE)
+#writer=tf.summary.FileWriter(cfg.LOGDIR)
+writer=tf.summary.FileWriter(log_path)
 writer.add_graph(sess.graph)
 saver=tf.train.Saver()
 # Override variables if wished
@@ -156,10 +162,13 @@ for i in range(cfg.ITERATIONS):
     writer.add_summary(s,i)
     # Save snapshot
     #ssf_path = saver.save(sess,cfg.ARCHITECTURE,global_step=i)
-    epoch_number = int(50.*i/24990)
-    print 'epoch_number is, ', epoch_number
+    
     save_path = os.path.join("plane%itraining"%cfg.PLANE)
-    ssf_path = saver.save(sess,save_path+'/'+cfg.ARCHITECTURE,global_step=epoch_number)
+    ssf_path = saver.save(sess,save_path+'/'+cfg.ARCHITECTURE,global_step=i)
+
+    #save_path = os.path.join("plane%itraining"%cfg.PLANE)
+    #epoch_number = int(50.*i/24990)
+    #ssf_path = saver.save(sess,save_path+'/'+cfg.ARCHITECTURE,global_step=epoch_number)
     print 'saved @',ssf_path
 
 # post training test
@@ -169,4 +178,4 @@ data,label = proc.next()
 print("Final test accuracy %g"%accuracy.eval(feed_dict={data_tensor: data, label_tensor: label}))
 
 # inform log directory
-print('Run `tensorboard --logdir=%s` in terminal to see the results.' % cfg.LOGDIR)
+print('Run `tensorboard --logdir=%s` in terminal to see the results.' % log_path)
