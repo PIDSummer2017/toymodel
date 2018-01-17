@@ -108,7 +108,10 @@ def main():
   # Step 3: Configure global process (session, summary, etc.)
   #
   # Create a session
-  sess = tf.InteractiveSession()
+
+  session_conf = tf.ConfigProto(intra_op_parallelism_threads=1,inter_op_parallelism_threads=1)
+  #sess = tf.Session(config=session_conf)
+  sess = tf.InteractiveSession(config=session_conf)
   # Initialize variables
   sess.run(tf.global_variables_initializer())
   # Override variables if wished
