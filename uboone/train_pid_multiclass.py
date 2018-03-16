@@ -69,25 +69,28 @@ data_tensor_2d = tf.reshape(data_tensor, [-1,image_dim[2],image_dim[3],1])
 tf.summary.image('input',data_tensor_2d,10)
 
 # Call network build function (then we add more train-specific layers)
-net = None
-cmd = 'from toynet import toy_%s;net=toy_%s.build(data_tensor_2d,cfg.NUM_CLASS)' % (cfg.ARCHITECTURE,cfg.ARCHITECTURE)
+train_net = None
+test_net  = None
 print 'cfg.ARCHITECTURE is ',cfg.ARCHITECTURE
+cmd = 'from toynet import toy_%s;train_net=toy_%s.build(data_tensor_2d,cfg.NUM_CLASS,trainable=True,reuse=False)' % (cfg.ARCHITECTURE,cfg.ARCHITECTURE)
+exec(cmd)
+cmd = 'from toynet import toy_%s;test_net=toy_%s.build(data_tensor_2d,cfg.NUM_CLASS,trainable=False,reuse=True)' % (cfg.ARCHITECTURE,cfg.ARCHITECTURE)
 exec(cmd)
 
 # Define accuracy
 with tf.name_scope('accuracy'):
-  sigmoid = tf.nn.sigmoid(net)
+  sigmoid = tf.nn.sigmoid(test_net)
   correct_prediction = tf.equal(tf.rint(sigmoid), tf.rint(label_tensor))
   accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
   tf.summary.scalar('accuracy', accuracy)
     
   # Define loss + backprop as training step
 with tf.name_scope('train'):
-  #cross_entropy = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=label_tensor, logits=net))
-  #precision, pre_op = tf.metrics.precision(labels=label_tensor, predictions=net)
-  cross_entropy = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=label_tensor, logits=net))
+
+  #precision, pre_op = tf.metrics.precision(labels=label_tensor, predictions=train_net)
+  cross_entropy = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=label_tensor, logits=train_net))
   tf.summary.scalar('cross_entropy',cross_entropy)
-  #cross_entropy = tf.divide(tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=label_tensor, logits=net)), precision)
+  #cross_entropy = tf.divide(tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=label_tensor, logits=train_net)), precision)
   train_step = tf.train.RMSPropOptimizer(0.0003).minimize(cross_entropy)  
     
   #
