@@ -62,7 +62,7 @@ label_dim = proc.label_dim()
 
 # Set input data and label for training
 #with tf.device('/gpu:%i'%cfg.GPU_INDEX):
-
+#keep_prob = tf.placeholder(tf.float32)
 data_tensor    = tf.placeholder(tf.float32, [None, image_dim[2] * image_dim[3]],name='x')
 label_tensor   = tf.placeholder(tf.float32, [None, cfg.NUM_CLASS],name='labels')
 data_tensor_2d = tf.reshape(data_tensor, [-1,image_dim[2],image_dim[3],1])
@@ -72,27 +72,31 @@ tf.summary.image('input',data_tensor_2d,10)
 train_net = None
 test_net  = None
 print 'cfg.ARCHITECTURE is ',cfg.ARCHITECTURE
-cmd = 'from toynet import toy_%s;train_net=toy_%s.build(data_tensor_2d,cfg.NUM_CLASS,trainable=True,reuse=False)' % (cfg.ARCHITECTURE,cfg.ARCHITECTURE)
+cmd = 'from toynet import toy_%s;train_net=toy_%s.build(data_tensor_2d,cfg.NUM_CLASS,trainable=True,reuse=False,keep_prob = 0.5)' % (cfg.ARCHITECTURE,cfg.ARCHITECTURE)
 exec(cmd)
-cmd = 'from toynet import toy_%s;test_net=toy_%s.build(data_tensor_2d,cfg.NUM_CLASS,trainable=False,reuse=True)' % (cfg.ARCHITECTURE,cfg.ARCHITECTURE)
+cmd = 'from toynet import toy_%s;test_net =toy_%s.build(data_tensor_2d,cfg.NUM_CLASS,trainable=False,reuse=True,keep_prob = 1.0)' % (cfg.ARCHITECTURE,cfg.ARCHITECTURE)
 exec(cmd)
+
+for tensor in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES):
+  print tensor.name
+  tf.summary.histogram(tensor.name, tensor)
 
 # Define accuracy
 with tf.name_scope('accuracy'):
   sigmoid = tf.nn.sigmoid(test_net)
+  tf.summary.histogram('sigmoid', sigmoid)
   correct_prediction = tf.equal(tf.rint(sigmoid), tf.rint(label_tensor))
   accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
   tf.summary.scalar('accuracy', accuracy)
-    
   # Define loss + backprop as training step
 with tf.name_scope('train'):
 
-  #precision, pre_op = tf.metrics.precision(labels=label_tensor, predictions=train_net)
+  ##precision, pre_op = tf.metrics.precision(labels=label_tensor, predictions=train_net)
   cross_entropy = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=label_tensor, logits=train_net))
   tf.summary.scalar('cross_entropy',cross_entropy)
-  #cross_entropy = tf.divide(tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=label_tensor, logits=train_net)), precision)
-  train_step = tf.train.RMSPropOptimizer(0.0003).minimize(cross_entropy)  
-    
+  ##cross_entropy = tf.divide(tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=label_tensor, logits=train_net)), precision)
+  train_step = tf.train.RMSPropOptimizer(0.0001).minimize(cross_entropy)  
+  #train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)  
   #
   # 2) Configure global process (session, summary, etc.)
   #
@@ -131,8 +135,14 @@ for i in range(cfg.ITERATIONS):
   # Start IO thread for the next batch while we train the network
   proc.read_next(cfg.BATCH_SIZE)
   # Run loss & train step
-  loss,acc,_ = sess.run([cross_entropy,accuracy,train_step],feed_dict={data_tensor: data, label_tensor: label})
 
+  #tmp0 = tf.Print(test_net,     [test_net], "test_net")
+  #tmp1 = tf.Print(sigmoid,      [sigmoid], "sigmoid")
+  #tmp2 = tf.Print(label_tensor, [label_tensor], "true label")
+  #loss,acc,_,print0,print1,print2 = sess.run([cross_entropy,accuracy,train_step,tmp0,tmp1,tmp2],feed_dict={data_tensor: data, label_tensor: label})
+  
+  loss,acc,_= sess.run([cross_entropy,accuracy,train_step],feed_dict={data_tensor: data, label_tensor: label})
+  
   sys.stdout.write('Training in progress @ step %d loss %g accuracy %g\r' % (i,loss,acc))
   sys.stdout.flush()
 
