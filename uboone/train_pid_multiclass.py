@@ -1,5 +1,6 @@
 # Basic imports
 import os,sys,time
+import shutil
 from toytrain import config
 
 # Load configuration and check if it's good
@@ -60,40 +61,57 @@ label_dim = proc.label_dim()
 #
 
 # Set input data and label for training
+#with tf.device('/gpu:%i'%cfg.GPU_INDEX):
+#keep_prob = tf.placeholder(tf.float32)
 data_tensor    = tf.placeholder(tf.float32, [None, image_dim[2] * image_dim[3]],name='x')
 label_tensor   = tf.placeholder(tf.float32, [None, cfg.NUM_CLASS],name='labels')
 data_tensor_2d = tf.reshape(data_tensor, [-1,image_dim[2],image_dim[3],1])
 tf.summary.image('input',data_tensor_2d,10)
 
 # Call network build function (then we add more train-specific layers)
-net = None
-cmd = 'from toynet import toy_%s;net=toy_%s.build(data_tensor_2d,cfg.NUM_CLASS)' % (cfg.ARCHITECTURE,cfg.ARCHITECTURE)
+train_net = None
+test_net  = None
+print 'cfg.ARCHITECTURE is ',cfg.ARCHITECTURE
+cmd = 'from toynet import toy_%s;train_net=toy_%s.build(data_tensor_2d,cfg.NUM_CLASS,trainable=True,reuse=False,keep_prob = 0.5)' % (cfg.ARCHITECTURE,cfg.ARCHITECTURE)
 exec(cmd)
+cmd = 'from toynet import toy_%s;test_net =toy_%s.build(data_tensor_2d,cfg.NUM_CLASS,trainable=False,reuse=True,keep_prob = 1.0)' % (cfg.ARCHITECTURE,cfg.ARCHITECTURE)
+exec(cmd)
+
+for tensor in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES):
+  print tensor.name
+  tf.summary.histogram(tensor.name, tensor)
 
 # Define accuracy
 with tf.name_scope('accuracy'):
-  sigmoid = tf.nn.sigmoid(net)
+  sigmoid = tf.nn.sigmoid(test_net)
+  tf.summary.histogram('sigmoid', sigmoid)
   correct_prediction = tf.equal(tf.rint(sigmoid), tf.rint(label_tensor))
   accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
   tf.summary.scalar('accuracy', accuracy)
-
-# Define loss + backprop as training step
+  # Define loss + backprop as training step
 with tf.name_scope('train'):
-  cross_entropy = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=label_tensor, logits=net))
-  tf.summary.scalar('cross_entropy',cross_entropy)
-  train_step = tf.train.RMSPropOptimizer(0.0003).minimize(cross_entropy)  
 
-#
-# 2) Configure global process (session, summary, etc.)
-#
-# Create a bandle of summary
+  ##precision, pre_op = tf.metrics.precision(labels=label_tensor, predictions=train_net)
+  cross_entropy = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=label_tensor, logits=train_net))
+  tf.summary.scalar('cross_entropy',cross_entropy)
+  ##cross_entropy = tf.divide(tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=label_tensor, logits=train_net)), precision)
+  train_step = tf.train.RMSPropOptimizer(0.0001).minimize(cross_entropy)  
+  #train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)  
+  #
+  # 2) Configure global process (session, summary, etc.)
+  #
+  # Create a bandle of summary
 merged_summary=tf.summary.merge_all()
 # Create a session
-sess = tf.InteractiveSession()
+#sess = tf.InteractiveSession()
+sess = tf.InteractiveSession(config=tf.ConfigProto(log_device_placement=True))
 # Initialize variables
 sess.run(tf.global_variables_initializer())
+sess.run(tf.local_variables_initializer())
 # Create a summary writer handle
-writer=tf.summary.FileWriter(cfg.LOGDIR)
+log_path = cfg.LOGDIR+str(cfg.PLANE)
+#writer=tf.summary.FileWriter(cfg.LOGDIR)
+writer=tf.summary.FileWriter(log_path)
 writer.add_graph(sess.graph)
 saver=tf.train.Saver()
 # Override variables if wished
@@ -117,19 +135,28 @@ for i in range(cfg.ITERATIONS):
   # Start IO thread for the next batch while we train the network
   proc.read_next(cfg.BATCH_SIZE)
   # Run loss & train step
-  loss,acc,_ = sess.run([cross_entropy,accuracy,train_step],feed_dict={data_tensor: data, label_tensor: label})
 
+  #tmp0 = tf.Print(test_net,     [test_net], "test_net")
+  #tmp1 = tf.Print(sigmoid,      [sigmoid], "sigmoid")
+  #tmp2 = tf.Print(label_tensor, [label_tensor], "true label")
+  #loss,acc,_,print0,print1,print2 = sess.run([cross_entropy,accuracy,train_step,tmp0,tmp1,tmp2],feed_dict={data_tensor: data, label_tensor: label})
+  
+  loss,acc,_= sess.run([cross_entropy,accuracy,train_step],feed_dict={data_tensor: data, label_tensor: label})
+  
   sys.stdout.write('Training in progress @ step %d loss %g accuracy %g\r' % (i,loss,acc))
   sys.stdout.flush()
 
   # Debug mode will dump images
   if cfg.DEBUG:
+    shutil.rmtree('multi_debug')
+    if not os.path.exists('multi_debug'):
+      os.makedirs('multi_debug')
     for idx in xrange(len(data)):
       img = None 
       img = data[idx].reshape([image_dim[2],image_dim[3]])
       
       adcpng = plt.imshow(img)
-      imgname = 'debug_class_%d_entry_%04d.png' % (np.argmax(label[idx]),i*cfg.ITERATIONS+idx)
+      imgname = 'multi_debug/debug_class_%d_entry_%04d.png' % (np.argmax(label[idx]),i*cfg.ITERATIONS+idx)
       if os.path.isfile(imgname): raise Exception
       adcpng.write_png(imgname)
       plt.close()
@@ -147,7 +174,14 @@ for i in range(cfg.ITERATIONS):
     s = sess.run(merged_summary, feed_dict={data_tensor:data, label_tensor:label})
     writer.add_summary(s,i)
     # Save snapshot
-    ssf_path = saver.save(sess,cfg.ARCHITECTURE,global_step=i)
+    #ssf_path = saver.save(sess,cfg.ARCHITECTURE,global_step=i)
+    
+    save_path = os.path.join("plane%itraining"%cfg.PLANE)
+    ssf_path = saver.save(sess,save_path+'/'+cfg.ARCHITECTURE,global_step=i)
+
+    #save_path = os.path.join("plane%itraining"%cfg.PLANE)
+    #epoch_number = int(50.*i/24990)
+    #ssf_path = saver.save(sess,save_path+'/'+cfg.ARCHITECTURE,global_step=epoch_number)
     print 'saved @',ssf_path
 
 # post training test
@@ -157,4 +191,4 @@ data,label = proc.next()
 print("Final test accuracy %g"%accuracy.eval(feed_dict={data_tensor: data, label_tensor: label}))
 
 # inform log directory
-print('Run `tensorboard --logdir=%s` in terminal to see the results.' % cfg.LOGDIR)
+print('Run `tensorboard --logdir=%s` in terminal to see the results.' % log_path)

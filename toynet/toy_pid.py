@@ -2,41 +2,58 @@ import numpy as np
 import tensorflow.python.platform
 import tensorflow as tf
 import toy_layers as L
+import tensorflow.contrib.slim as slim
 
-def build(input_tensor, num_class=4):
-
-    net = input_tensor
-    # 1st conv layers ... default assumption: input 576 x 576 x 1
-    net = L.conv2d(input_tensor=net, name='conv1_1', kernel=(3,3), stride=(2,2), num_filter=64, activation_fn=tf.nn.relu)
-    net = L.conv2d(input_tensor=net, name='conv1_2', kernel=(3,3), stride=(1,1), num_filter=64, activation_fn=tf.nn.relu)
-    # max pool
-    net = L.max_pool (input_tensor=net, name="pool1",   kernel=(3,3), stride=(2,2))
-    # 2nd conv layers ... 144 x 144 x 64 (because of stride 2 in conv1_1)
-    net = L.conv2d(input_tensor=net, name='conv2_1', kernel=(3,3), stride=(1,1), num_filter=128, activation_fn=tf.nn.relu)
-    net = L.conv2d(input_tensor=net, name='conv2_2', kernel=(3,3), stride=(1,1), num_filter=128, activation_fn=tf.nn.relu)
-    # max pool
-    net = L.max_pool (input_tensor=net, name="pool2",   kernel=(3,3), stride=(2,2))
-    # 3rd conf layers ... 72 x 72 x 128
-    net = L.conv2d(input_tensor=net, name='conv3_1', kernel=(3,3), stride=(1,1), num_filter=256, activation_fn=tf.nn.relu)
-    net = L.conv2d(input_tensor=net, name='conv3_2', kernel=(3,3), stride=(1,1), num_filter=256, activation_fn=tf.nn.relu)
-    # max pool
-    net = L.max_pool (input_tensor=net, name="pool3",   kernel=(3,3), stride=(2,2))
-    # 4rd conf layers ... 36 x 36 x 256
-    net = L.conv2d(input_tensor=net, name='conv4_1', kernel=(3,3), stride=(1,1), num_filter=512, activation_fn=tf.nn.relu)
-    net = L.conv2d(input_tensor=net, name='conv4_2', kernel=(3,3), stride=(1,1), num_filter=512, activation_fn=tf.nn.relu)
-    # max pool
-    net = L.max_pool (input_tensor=net, name="pool4",   kernel=(3,3), stride=(2,2))
-    # 4rd conf layers ... 18 x 18 x 512
-    net = L.conv2d(input_tensor=net, name='conv5_1', kernel=(3,3), stride=(1,1), num_filter=512, activation_fn=tf.nn.relu)
-    net = L.conv2d(input_tensor=net, name='conv5_2', kernel=(3,3), stride=(1,1), num_filter=512, activation_fn=tf.nn.relu)
-    # max pool
-    net = L.max_pool (input_tensor=net, name="pool4",   kernel=(3,3), stride=(2,2))
-    # by here it's 9 x 9 x 512
-    return L.final_inner_product(input_tensor=net, name='fc_final', num_output=num_class)
-    #Final Array will be 41472 x 5 (9x9x512 and 5 classes)
+def build(input_tensor, num_class=4, trainable=True, reuse=False, keep_prob = 0.5):
+    with tf.variable_scope("toy_pid", reuse=reuse):
+        net = input_tensor
+        num_outer_step = 5
+        num_inner_step = 2
+        num_base_filters = 32
+        for outer_step in xrange(num_outer_step):
+            for inner_step in xrange(num_inner_step):
+                stride = 1
+                activation_fn = tf.nn.relu
+                #activation_fn = None
+                if outer_step == 0 and inner_step == 0:
+                    stride = 2
+                if (outer_step+1) == num_outer_step and (inner_step+1) == num_inner_step:
+                    activation_fn = None
+                    #activation_fn = tf.nn.relu
+                net = slim.conv2d (net, 
+                                   num_outputs=num_base_filters * (outer_step+2), 
+                                   kernel_size=3, 
+                                   stride=stride, 
+                                   normalizer_fn = slim.batch_norm, 
+                                   #normalizer_fn = None, 
+                                   activation_fn = activation_fn,
+                                   trainable = trainable, 
+                                   #activation_fn = None,
+                                   weights_regularizer=slim.l2_regularizer(0.001),
+                                   biases_regularizer=slim.l2_regularizer(0.001),
+                                   biases_initializer=tf.constant_initializer(0.1),
+                                   scope='conv%d_%d' % (outer_step,inner_step) )
+                print('Step {:d}.{:d} ... {:s}'.format(outer_step,inner_step,net.shape))
+                
+            net = slim.max_pool2d (net, 2, scope='maxpool%d' % outer_step)
+            print('Pool {:d} ... {:s}'.format(outer_step,net.shape))
+            
+        net = slim.flatten(net, scope='flatten')
+        print('Flattened ... {:s}'.format(net.shape))
+        
+        for x in xrange(3):
+            if x == 0 : output = 1024
+            if x == 1 : output = 256
+            if x == 2 : output = 5
+            activation_fn = None
+            net = slim.fully_connected (net, output, activation_fn=activation_fn, biases_initializer=tf.constant_initializer(0.1), scope='fc%i'%x )
+            with tf.variable_scope('drop_out%i'%x):
+                net = slim.dropout (net, keep_prob,      scope='dropout%i'%x)
+            print('FC{:n} ... {:s}'.format(x, net.shape))
+    return net
 
 # script unit test
 if __name__ == '__main__':
-    x = tf.placeholder(tf.float32, [50,28,28,1])
+    x = tf.placeholder(tf.float32, [50,512,512,1])
     net = build(x)
     

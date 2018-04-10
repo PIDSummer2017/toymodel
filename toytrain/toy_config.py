@@ -12,7 +12,10 @@ class config:
         self.ARCHITECTURE   = 'lenet'
         self.LOAD_FILE      = '/data/drinkingkazu/summer2017/toymodel/train_multiclass2/pid-18199'
         self.AVOID_LOAD_PARAMS = ''
-        self.FILLER_CONFIG = 'multiclass_filler_1e1p_allE.cfg'
+        self.FILLER_CONFIG = ''
+        self.GPU_INDEX = ''
+        self.PLANE = ''
+
     def parse(self,argv_v):
 
         cfg_file=None
@@ -42,10 +45,26 @@ class config:
                     self.AVOID_LOAD_PARAMS = argv.replace('avoid_params=','')
                 elif argv.startswith('filler='):
                     self.FILLER_CONFIG = argv.replace('filler=','')
+                elif argv.startswith('gpu_index='):
+                    self.GPU_INDEX = int(argv.replace('gpu_index=',''))
+                elif argv.startswith('plane='):
+                    self.PLANE = int(argv.replace('plane=',''))
             except Exception:
                 print 'argument:',argv,'not in a valid format (parsing failed!)'
                 return False
         return True
+
+    def ask_binary(self,comment):
+        user_input=None
+        while user_input is None:
+            sys.stdout.write('%s [y/n]:' % comment)
+            sys.stdout.flush()
+            user_input = sys.stdin.readline().rstrip('\n')
+            if not user_input.lower() in ['y','n','yes','no']:
+                print 'Unsupported answer:',user_input
+                user_input=None
+                continue
+            return user_input in ['y','yes']
 
     def check_log(self):
         # Check if log directory already exists
@@ -55,23 +74,17 @@ class config:
             return os.path.isdir(self.LOGDIR)
 
         print '[WARNING] Log directory already present:',self.LOGDIR
-        user_input=None
-        while user_input is None:
-            sys.stdout.write('Remove and proceed? [y/n]:')
-            sys.stdout.flush()
-            user_input = sys.stdin.readline().rstrip('\n')
-            if not user_input.lower() in ['y','n','yes','no']:
-                print 'Unsupported answer:',user_input
-                user_input=None
-                continue
-            if user_input in ['n','no']:
-                print 'Exiting...'
-                return False
-            else:
-                os.system('rm -rf %s' % self.LOGDIR)
-                os.mkdir(self.LOGDIR)
-                return True
-
+        
+        os.system('rm -rf %s' % self.LOGDIR)                                                                                                                                       
+        return True
+        '''
+        rmdir = self.ask_binary('Remove and proceed?')
+        if rmdir:
+            os.system('rm -rf %s' % self.LOGDIR)
+            return True
+        else:
+            return self.ask_binary('Proceed anyway?')
+        '''
     def sanity_check(self):
         # log directory duplication
         if not self.check_log():
@@ -104,6 +117,8 @@ class config:
         msg += '    load file?         = %s\n' % self.LOAD_FILE
         msg += '    save per iteration = %s\n' % self.SAVE_ITERATION
         msg += '    avoid params       = %s\n' % self.AVOID_LOAD_PARAMS
+        msg += '    gpu index          = %s\n' % self.GPU_INDEX
+        msg += '    plane              = %s\n' % self.PLANE
         return msg
 
 if __name__ == '__main__':

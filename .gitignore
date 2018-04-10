@@ -8,4 +8,5 @@ log*/
 *.data*
 *.meta
 *.index
+*/#*
 checkpoint

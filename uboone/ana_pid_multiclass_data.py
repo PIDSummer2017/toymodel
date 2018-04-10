@@ -12,60 +12,19 @@ import numpy as np
 def time_round(num,digits):
   return float( int(num * np.power(10,digits)) / float(np.power(10,digits)) )
 
-class truth_info:
+class entry_info:
   def __init__(self):
-    self.multi_all = 0
-    self.multi_neutron = 0
-    self.multi_sum = 0
-    self.multi_v = [0]*5
-    self.max_energy_v = [-1.]*5
-    self.min_energy_v = [-1.]*5
-    self.energy_sum = 0.
-    self.dcosz_v = [-2]*5
-    self.open_angle = -1
-
-def get_truth_info(roi_chain,entry):
-  mass = [0.511,0.,105.6,139.6,938.28]
+    self.run = 0
+    self.subrun = 0
+    self.event = 0
+# info retriever
+def get_info(roi_chain, entry):
   roi_chain.GetEntry(entry)
-  roi_v = roi_chain.partroi_segment_branch.ROIArray()
-  res = truth_info()
-  two_part_index = []
-  for idx in xrange(roi_v.size()):
-    roi = roi_v[idx]
-    energy = roi.EnergyInit()
-    index = -1
-    if   np.abs(roi.PdgCode()) == 11: index = 0
-    elif np.abs(roi.PdgCode()) == 22: index = 1
-    elif np.abs(roi.PdgCode()) == 13: index = 2
-    elif np.abs(roi.PdgCode()) == 211: index = 3
-    elif np.abs(roi.PdgCode()) == 2212: index = 4
-    res.multi_all +=1
-    if np.abs(roi.PdgCode()) == 2112: res.multi_neutron += 1
-    if index<0: continue
-
-    two_part_index.append(idx)
-    res.multi_v[index] += 1
-    energy -= mass[index]
-    res.energy_sum += energy
-    if res.max_energy_v[index] < 0 or res.max_energy_v[index] < energy:
-      res.max_energy_v[index] = energy
-      res.dcosz_v[index] = roi.Pz() / np.sqrt(np.power(roi.Px(),2) + np.power(roi.Py(),2) +np.power(roi.Pz(),2))
-    if res.min_energy_v[index] < 0 or res.min_energy_v[index] > energy:
-      res.min_energy_v[index] = energy
-
-  for v in res.multi_v:
-    res.multi_sum += v
-
-  if len(two_part_index) == 2:
-    part1 = roi_v[two_part_index[0]]
-    part2 = roi_v[two_part_index[1]]
-    mag1 = np.sqrt(np.power(part1.Px(),2)+np.power(part1.Py(),2)+np.power(part1.Pz(),2))
-    mag2 = np.sqrt(np.power(part2.Px(),2)+np.power(part2.Py(),2)+np.power(part2.Pz(),2))
-    res.open_angle = part1.Px() * part2.Px() + part1.Py() * part2.Py() + part1.Pz() * part2.Pz()
-    res.open_angle = np.arccos(res.open_angle / (mag1 * mag2)) / np.pi * 180.
-  else:
-    res.open_angle = -1
-
+  roi = roi_chain.partroi_p0roi_pid_branch
+  res = entry_info()
+  res.run = roi.run()
+  res.subrun = roi.subrun()
+  res.event = roi.event()
   return res
 
 def main():
@@ -118,10 +77,10 @@ def main():
   from larcv import larcv
   from ROOT import TChain
   filler = larcv.ThreadFillerFactory.get_filler("DataFiller")
-  roi_chain = TChain("partroi_segment_tree")
+  roi_chain = TChain("partroi_p0roi_pid_tree")
   for fname in filler.pd().io().file_list():
     roi_chain.AddFile(fname)
-  filler.set_next_index(5861)
+  #filler.set_next_index(5861)
   # Immediately start the thread for later IO
   proc.read_next(cfg.BATCH_SIZE)
 
@@ -130,6 +89,8 @@ def main():
   #
 
   # Set input data and label for training
+  print 'image_dim is ', image_dim
+
   data_tensor    = tf.placeholder(tf.float32, [None, image_dim[2] * image_dim[3]],name='x')
   label_tensor   = tf.placeholder(tf.float32, [None, cfg.NUM_CLASS],name='labels')
   data_tensor_2d = tf.reshape(data_tensor, [-1,image_dim[2],image_dim[3],1])
@@ -147,7 +108,10 @@ def main():
   # Step 3: Configure global process (session, summary, etc.)
   #
   # Create a session
-  sess = tf.InteractiveSession()
+
+  session_conf = tf.ConfigProto(intra_op_parallelism_threads=1,inter_op_parallelism_threads=1)
+  #sess = tf.Session(config=session_conf)
+  sess = tf.InteractiveSession(config=session_conf)
   # Initialize variables
   sess.run(tf.global_variables_initializer())
   # Override variables if wished
@@ -156,21 +120,15 @@ def main():
   # Analysis csv file
   weight_file_name = cfg.LOAD_FILE.split('/')[-1]
   filler_file_name = cfg.FILLER_CONFIG.split('/')[-1].replace('.cfg','')
-  fout = open('%s.%s.csv' % (weight_file_name,filler_file_name),'w')
-  fout.write('entry,label0, label1, label2, label3, label4')
+  fout = open('%s.%s.plane%s.csv' % (weight_file_name,filler_file_name,cfg.PLANE),'w')
+  fout.write('entry,run,subrun,event')
   for idx in xrange(cfg.NUM_CLASS):
-    fout.write(',score%02d' % idx)
-  for idx in xrange(cfg.NUM_CLASS):
-    fout.write(',max_energy%02d' % idx)
-  for idx in xrange(cfg.NUM_CLASS):
-    fout.write(',min_energy%02d' % idx)
-  for idx in xrange(cfg.NUM_CLASS):
-    fout.write(',dcosz%02d' % idx)
-  fout.write(',multi_all,multi_neutron,multi_sum,energy_sum,open_angle')
+    fout.write(',score%02d'%idx)
   fout.write('\n')
 
   # Run training loop
   entry_number_v = [0] * cfg.BATCH_SIZE
+  this_entry = 0
   for i in range(cfg.ITERATIONS):
     # Report the progress
     sys.stdout.write('Processing %d/%d\r' % (i,cfg.ITERATIONS))
@@ -184,26 +142,20 @@ def main():
     score_vv = sess.run(sigmoid,feed_dict={data_tensor: data})
                 
     for res_idx,score_v in enumerate(score_vv):
+      this_entry+=1
+      if(this_entry> roi_chain.GetEntries()): break;
       entry = entry_number_v[res_idx]
       fout.write('%d' % entry)
 
-      mcinfo = get_truth_info(roi_chain, entry)
-      for v in mcinfo.multi_v:
-        fout.write(',%d' % int(v))
+      info = get_info(roi_chain, entry)
+      fout.write(',%d' % (info.run))
+      fout.write(',%d' % (info.subrun))
+      fout.write(',%d' % (info.event))
+
       for score in score_v:
         fout.write(',%g' % score)
-      for v in mcinfo.max_energy_v:
-        fout.write(',%g' % v)
-      for v in mcinfo.min_energy_v:
-        fout.write(',%g' % v)
-      for v in mcinfo.dcosz_v:
-        fout.write(',%g' % v)
-      fout.write(',%d' % mcinfo.multi_all)
-      fout.write(',%d' % mcinfo.multi_neutron)
-      fout.write(',%d' % mcinfo.multi_sum)
-      fout.write(',%g' % mcinfo.energy_sum)
-      fout.write(',%g' % mcinfo.open_angle)
       fout.write('\n')
+    if(this_entry> roi_chain.GetEntries()): break;
     # Start IO thread for the next batch 
 
     proc.read_next(cfg.BATCH_SIZE)
@@ -218,5 +170,6 @@ if __name__ == '__main__':
   if GPUID < 0:
     sys.stderr.write('No available GPU with memory %d\n' % GPUMEM)
     sys.exit(1)
-  with tf.device('/gpu:%d' % GPUID):
+  #with tf.device('/gpu:%d' % GPUID):
+  with tf.device('/cpu:0'):
     main()
