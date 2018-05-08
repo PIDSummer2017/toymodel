@@ -30,6 +30,7 @@ def get_truth_info(roi_chain,entry):
   roi_v = roi_chain.partroi_segment_branch.ROIArray()
   res = truth_info()
   two_part_index = []
+  res.multi_v = [0]*5
   for idx in xrange(roi_v.size()):
     roi = roi_v[idx]
     energy = roi.EnergyInit()
@@ -136,7 +137,8 @@ def main():
 
   # Call network build function (then we add more train-specific layers)
   net = None
-  cmd = 'from toynet import toy_%s;net=toy_%s.build(data_tensor_2d,cfg.NUM_CLASS)' % (cfg.ARCHITECTURE,cfg.ARCHITECTURE)
+  #cmd = 'from toynet import toy_%s;net=toy_%s.build(data_tensor_2d,cfg.NUM_CLASS)' % (cfg.ARCHITECTURE,cfg.ARCHITECTURE)
+  cmd = 'from toynet import toy_%s;net =toy_%s.build(data_tensor_2d,cfg.NUM_CLASS,keep_prob = 1.0)' % (cfg.ARCHITECTURE,cfg.ARCHITECTURE)
   exec(cmd)
 
   # Define accuracy
@@ -157,7 +159,7 @@ def main():
   weight_file_name = cfg.LOAD_FILE.split('/')[-1]
   filler_file_name = cfg.FILLER_CONFIG.split('/')[-1].replace('.cfg','')
   fout = open('%s.%s.csv' % (weight_file_name,filler_file_name),'w')
-  fout.write('entry,label0, label1, label2, label3, label4')
+  fout.write('entry,label0,label1,label2,label3,label4')
   for idx in xrange(cfg.NUM_CLASS):
     fout.write(',score%02d' % idx)
   for idx in xrange(cfg.NUM_CLASS):
