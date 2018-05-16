@@ -34,13 +34,15 @@ def build(input_tensor, num_class=4, trainable=True, reuse=False, keep_prob = 0.
                                    biases_initializer=tf.constant_initializer(0.1),
                                    scope='conv%d_%d' % (outer_step,inner_step) )
                 print('Step {:d}.{:d} ... {:s}'.format(outer_step,inner_step,net.shape))
-                
-            net = slim.max_pool2d (net, 2, scope='maxpool%d' % outer_step)
+               
+            #net = slim.max_pool2d (net, 2, scope='maxpool%d' % outer_step)
+            net = slim.avg_pool2d (net, 2, scope='avgpool%d' % outer_step)
             print('Pool {:d} ... {:s}'.format(outer_step,net.shape))
             
         net = slim.flatten(net, scope='flatten')
+        net = slim.dropout(net,keep_prob=keep_prob, scope='dropout')
         print('Flattened ... {:s}'.format(net.shape))
-        
+        '''
         for x in xrange(3):
             if x == 0 : output = 1024
             if x == 1 : output = 256
@@ -50,6 +52,10 @@ def build(input_tensor, num_class=4, trainable=True, reuse=False, keep_prob = 0.
             with tf.variable_scope('drop_out%i'%x):
                 net = slim.dropout (net, keep_prob,      scope='dropout%i'%x)
             print('FC{:n} ... {:s}'.format(x, net.shape))
+        '''
+        activation_fn = None
+        output=5
+        net = slim.fully_connected (net, output, activation_fn=activation_fn, biases_initializer=tf.constant_initializer(0.1), scope='fc0' )
     return net
 
 # script unit test

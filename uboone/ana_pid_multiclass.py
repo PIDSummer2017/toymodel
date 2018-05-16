@@ -4,6 +4,9 @@ from toytrain import config
 import numpy as np
 import tensorflow as tf
 
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"]="3"
+
 #
 # Utility functions
 #

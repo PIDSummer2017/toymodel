@@ -1,4 +1,5 @@
-import os, sys, toynet
+
+import os, sys, toynet, glob
 
 class config:
 
@@ -13,14 +14,20 @@ class config:
         self.LOAD_FILE      = ''
         self.AVOID_LOAD_PARAMS = ''
         self.FILLER_CONFIG = ''
+        self.TRAIN_FILLER_CONFIG = ''
+        self.TEST_FILLER_CONFIG = ''
         self.GPU_INDEX = ''
         self.PLANE = ''
+        self.LATEST_DIR=''
+        self.LATEST_FILE=''
     def parse(self,argv_v):
 
         cfg_file=None
         if len(argv_v) == 2 and argv_v[1].endswith('.cfg'):
             params=open(argv_v[1],'r').read().split()
             return self.parse(params)
+
+        # Get the latest weights
 
         for argv in argv_v:
             try:
@@ -44,10 +51,24 @@ class config:
                     self.AVOID_LOAD_PARAMS = argv.replace('avoid_params=','')
                 elif argv.startswith('filler='):
                     self.FILLER_CONFIG = argv.replace('filler=','')
+                elif argv.startswith('train_filler='):
+                    self.TRAIN_FILLER_CONFIG = argv.replace('train_filler=','')
+                elif argv.startswith('test_filler='):
+                    self.TEST_FILLER_CONFIG = argv.replace('test_filler=','')
                 elif argv.startswith('gpu_index='):
                     self.GPU_INDEX = int(argv.replace('gpu_index=',''))
                 elif argv.startswith('plane='):
                     self.PLANE = int(argv.replace('plane=',''))
+                elif argv.startswith('cross_check_dir='):
+                    self.LATEST_DIR = argv.replace('cross_check_dir=','')
+                if(self.LATEST_DIR):
+                    dir_files=self.LATEST_DIR+'*'
+                    list_of_files = glob.glob(dir_files)
+                    latest_file = max(list_of_files, key=os.path.getctime)
+                    pid_file = os.path.splitext(os.path.basename(latest_file))[0]
+                    pid_path_file = os.path.join(self.LATEST_DIR, pid_file)
+                    self.LATEST_FILE=pid_path_file
+
             except Exception:
                 print 'argument:',argv,'not in a valid format (parsing failed!)'
                 return False
@@ -89,10 +110,10 @@ class config:
         if not self.check_log():
             return False
         # filler check
-        if self.FILLER_CONFIG:
-            if not os.path.isfile(self.FILLER_CONFIG):
-                self.FILLER_CONFIG = '%s/uboone/%s' % (os.environ['TOYMODEL_DIR'],self.FILLER_CONFIG)
-                if not os.path.isfile(self.FILLER_CONFIG):
+        if self.TRAIN_FILLER_CONFIG:
+            if not os.path.isfile(self.TRAIN_FILLER_CONFIG):
+                self.TRAIN_FILLER_CONFIG = '%s/uboone/%s' % (os.environ['TOYMODEL_DIR'],self.TRAIN_FILLER_CONFIG)
+                if not os.path.isfile(self.TRAIN_FILLER_CONFIG):
                     print 'LArCV data filler config file does not exist!'
                     return False
         # network availability
@@ -118,6 +139,8 @@ class config:
         msg += '    avoid params       = %s\n' % self.AVOID_LOAD_PARAMS
         msg += '    gpu index          = %s\n' % self.GPU_INDEX
         msg += '    plane              = %s\n' % self.PLANE
+        msg += '    cross check dir    = %s\n' % self.LATEST_DIR
+        msg += '    cross check file   = %s\n' % self.LATEST_FILE
         return msg
 
 if __name__ == '__main__':

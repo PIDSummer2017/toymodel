@@ -1,6 +1,6 @@
 # Basic imports
 import os,sys,time
-import shutil
+import shutil,csv
 from toytrain import config
 
 # Load configuration and check if it's good
@@ -13,6 +13,10 @@ print '\033[95mConfiguration\033[00m'
 print cfg
 time.sleep(0.5)
 
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
+os.environ["CUDA_VISIBLE_DEVICES"]="2"
+
+
 # Import more libraries (after configuration is validated)
 import matplotlib
 matplotlib.use('Agg')
@@ -22,6 +26,16 @@ import tensorflow as tf
 import numpy as np
 from dataloader import larcv_data
 
+# Create a csv file for online monitor
+if not (os.path.isfile('test_csv/plane%s/train_plane%s.csv'%(cfg.PLANE,cfg.PLANE))):
+  print 'Creating a new csv file for plane %s'%cfg.PLANE
+  fout = open('test_csv/plane%s/train_plane%s.csv'%(cfg.PLANE,cfg.PLANE),'w')
+  fout.write('iter,acc,loss')
+  fout.write('\n')
+  fout.flush()
+else:
+  print 'Found a csv file for plane %s'%cfg.PLANE
+  fout = open('test_csv/plane%s/train_plane%s.csv'%(cfg.PLANE,cfg.PLANE),'w')
 #
 # Utility functions
 #
@@ -113,7 +127,7 @@ log_path = cfg.LOGDIR+str(cfg.PLANE)
 #writer=tf.summary.FileWriter(cfg.LOGDIR)
 writer=tf.summary.FileWriter(log_path)
 writer.add_graph(sess.graph)
-saver=tf.train.Saver()
+saver=tf.train.Saver(max_to_keep=1000)
 # Override variables if wished
 if cfg.LOAD_FILE:
   vlist=[]
@@ -142,7 +156,7 @@ for i in range(cfg.ITERATIONS):
   #loss,acc,_,print0,print1,print2 = sess.run([cross_entropy,accuracy,train_step,tmp0,tmp1,tmp2],feed_dict={data_tensor: data, label_tensor: label})
   
   loss,acc,_= sess.run([cross_entropy,accuracy,train_step],feed_dict={data_tensor: data, label_tensor: label})
-  
+
   sys.stdout.write('Training in progress @ step %d loss %g accuracy %g\r' % (i,loss,acc))
   sys.stdout.flush()
 
@@ -175,7 +189,14 @@ for i in range(cfg.ITERATIONS):
     writer.add_summary(s,i)
     # Save snapshot
     #ssf_path = saver.save(sess,cfg.ARCHITECTURE,global_step=i)
-    
+  
+    print 'iter is ',i
+    print 'loss is ',loss
+    print 'acc is ',acc
+    print fout
+    fout.write('%d,%g,%g'%(i,acc,loss))
+    fout.write('\n')
+    fout.flush()
     save_path = os.path.join("plane%itraining"%cfg.PLANE)
     ssf_path = saver.save(sess,save_path+'/'+cfg.ARCHITECTURE,global_step=i)
 
@@ -183,6 +204,8 @@ for i in range(cfg.ITERATIONS):
     #epoch_number = int(50.*i/24990)
     #ssf_path = saver.save(sess,save_path+'/'+cfg.ARCHITECTURE,global_step=epoch_number)
     print 'saved @',ssf_path
+
+fout.close()
 
 # post training test
 data,label = proc.next()
