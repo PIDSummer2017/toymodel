@@ -1,5 +1,5 @@
 # Basic imports
-import os,sys,time
+import os,sys,time,glob
 from toytrain import config
 import numpy as np
 import tensorflow as tf
@@ -157,11 +157,21 @@ def main():
   sess.run(tf.global_variables_initializer())
   # Override variables if wished
   reader=tf.train.Saver()
-  reader.restore(sess,cfg.LOAD_FILE)
+  
+  list_of_files = glob.glob('plane2training/*')
+  latest_file = max(list_of_files, key=os.path.getctime)
+  weight_file_path = latest_file.split(".")[0]
+  weight_file_name =  latest_file.split(".")[0].split("/")[1]
+
+  print '========>>>>',weight_file_path
+
+  reader.restore(sess,weight_file_path)
   # Analysis csv file
-  weight_file_name = cfg.LOAD_FILE.split('/')[-1]
+  #weight_file_name = cfg.LOAD_FILE.split('/')[-1]
   filler_file_name = cfg.FILLER_CONFIG.split('/')[-1].replace('.cfg','')
-  fout = open('%s.%s.csv' % (weight_file_name,filler_file_name),'w')
+  fout = open('test_csv/plane%s/%s.%s.csv' % (cfg.PLANE,weight_file_name,filler_file_name),'w')
+  print '===============>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
+  print 'test_csv/plane%s/%s.%s.csv' % (cfg.PLANE,weight_file_name,filler_file_name) 
   fout.write('entry,label0,label1,label2,label3,label4')
   for idx in xrange(cfg.NUM_CLASS):
     fout.write(',score%02d' % idx)
@@ -220,8 +230,9 @@ if __name__ == '__main__':
   from choose_gpu import pick_gpu
   GPUMEM=10000
   GPUID=pick_gpu(GPUMEM,caffe_gpuid=True)
+  print GPUID
   if GPUID < 0:
     sys.stderr.write('No available GPU with memory %d\n' % GPUMEM)
     sys.exit(1)
-  with tf.device('/gpu:%d' % GPUID):
-    main()
+    #with tf.device('/gpu:%d' % GPUID):
+  main()
