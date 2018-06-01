@@ -102,6 +102,9 @@ df_m2['presence_multiplicity']=df_m2.apply(lambda row: presence_multiplicity(row
 pre_accu = np.sum(df_m2.accuracy_presence.values)/df_m2.index.size
 mul_accu = np.sum(df_m2.accuracy.values)/df_m2.index.size
 
+#print 'Presence Accuracy: ', pre_accu
+#print 'Multiplicity Accuracy: ', mul_accu
+
 fout.write('\n')
 fout.write('%s,%s'%(step,pre_accu))
 
