@@ -8,13 +8,18 @@ cfg = config()
 if not cfg.parse(sys.argv) or not cfg.sanity_check():
   sys.exit(1)
 
+# Get the start iter number
+start_iter=0
+if cfg.LOAD_FILE:
+  start_iter=int(cfg.LOAD_FILE.split('-')[1])
+
 # Print configuration
 print '\033[95mConfiguration\033[00m'
 print cfg
 time.sleep(0.5)
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
-os.environ["CUDA_VISIBLE_DEVICES"]="2"
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
 
 
 # Import more libraries (after configuration is validated)
@@ -35,7 +40,24 @@ if not (os.path.isfile('test_csv/plane%s/train_plane%s.csv'%(cfg.PLANE,cfg.PLANE
   fout.flush()
 else:
   print 'Found a csv file for plane %s'%cfg.PLANE
+  fout = open('test_csv/plane%s/train_plane%s.csv'%(cfg.PLANE,cfg.PLANE),'r+')
+  lines = fout.read().split("\n")
   fout = open('test_csv/plane%s/train_plane%s.csv'%(cfg.PLANE,cfg.PLANE),'w')
+  word = str(start_iter)
+
+  line_del = 0
+  for i,line in enumerate(lines):
+    if word in line: # or word in line.split() to search for full words
+      print("Word \"{}\" found in line {}".format(word, i+1))
+      line_del=i+1
+  print 'line number larger than ',line_del, ' are deleted'
+  for x in range(len(lines)):
+    if x<line_del:
+      fout.write(lines[x])
+      fout.write('\n')
+  fout.truncate()
+
+
 #
 # Utility functions
 #
@@ -143,7 +165,7 @@ if cfg.LOAD_FILE:
   
 # Run training loop
 for i in range(cfg.ITERATIONS):
-
+  i=i+start_iter
   # Receive data (this will hang if IO thread is still running = this will wait for thread to finish & receive data)
   data,label = proc.next()
   # Start IO thread for the next batch while we train the network

@@ -4,8 +4,7 @@ from toytrain import config
 import numpy as np
 import tensorflow as tf
 
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="3"
+
 
 #
 # Utility functions
@@ -75,10 +74,15 @@ def get_truth_info(roi_chain,entry):
 def main():
 
   # Load configuration and check if it's good
+
   cfg = config()
   if not cfg.parse(sys.argv) or not cfg.sanity_check():
     sys.exit(1)
-  
+
+  os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+
+  #os.environ["CUDA_VISIBLE_DEVICES"]=str(cfg.PLANE+2)
+  os.environ["CUDA_VISIBLE_DEVICES"]="0"
   # Print configuration
   print '\033[95mConfiguration\033[00m'
   print cfg
@@ -158,7 +162,7 @@ def main():
   # Override variables if wished
   reader=tf.train.Saver()
   
-  list_of_files = glob.glob('plane2training/*')
+  list_of_files = glob.glob('plane%straining/*'%(cfg.PLANE))
   latest_file = max(list_of_files, key=os.path.getctime)
   weight_file_path = latest_file.split(".")[0]
   weight_file_name =  latest_file.split(".")[0].split("/")[1]
