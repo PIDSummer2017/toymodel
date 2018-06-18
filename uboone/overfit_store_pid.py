@@ -6,7 +6,7 @@ import root_numpy as rn
 from toytrain import config
 
 font = {'size'   : 14}
-particle_dic = {0:'electron', 1:'gamma', 2:'muon', 3:'pion', 4:'proton'}
+particle_dic = {0:'eminus', 1:'gamma', 2:'muon', 3:'pion', 4:'proton'}
 cfg=config()
 if not cfg.parse(sys.argv) or not cfg.sanity_check():
     print 'Need config file'
