@@ -5,7 +5,7 @@ import toy_layers as L
 import tensorflow.contrib.slim as slim
 
 def build(input_tensor, num_class=4, trainable=True, reuse=False, keep_prob = 0.5):
-    with tf.variable_scope("toy_pid", reuse=reuse):
+    with tf.variable_scope("toy_multiplicity", reuse=reuse):
         net = input_tensor
         num_outer_step = 5
         num_inner_step = 2
