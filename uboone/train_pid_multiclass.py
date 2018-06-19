@@ -32,18 +32,18 @@ import numpy as np
 from dataloader import larcv_data
 
 # Create a csv file for online monitor
-if not (os.path.isfile('test_csv/plane%s/train_plane%s.csv'%(cfg.PLANE,cfg.PLANE))):
+if not (os.path.isfile('test_csv/plane%s/pid/train_plane%s.csv'%(cfg.PLANE,cfg.PLANE))):
   print 'Creating a new csv file for plane %s'%cfg.PLANE
-  fout = open('test_csv/plane%s/train_plane%s.csv'%(cfg.PLANE,cfg.PLANE),'w')
+  fout = open('test_csv/plane%s/pid/train_plane%s.csv'%(cfg.PLANE,cfg.PLANE),'w')
   fout.write('iter,acc,loss')
   fout.write('\n')
   fout.flush()
 
 else:
   print 'Found a csv file for plane %s'%cfg.PLANE
-  #fout = open('test_csv/plane%s/train_plane%s.csv'%(cfg.PLANE,cfg.PLANE),'r+')
+  #fout = open('test_csv/plane%s/pid/train_plane%s.csv'%(cfg.PLANE,cfg.PLANE),'r+')
   #lines = fout.read().split("\n")
-  fout = open('test_csv/plane%s/train_plane%s.csv'%(cfg.PLANE,cfg.PLANE),'w')
+  fout = open('test_csv/plane%s/pid/train_plane%s.csv'%(cfg.PLANE,cfg.PLANE),'w')
   '''
   word = str(start_iter)
   line_del = 0
@@ -221,7 +221,7 @@ for i in range(cfg.ITERATIONS):
     fout.write('%d,%g,%g'%(i,acc,loss))
     fout.write('\n')
     fout.flush()
-    save_path = os.path.join("plane%itraining"%cfg.PLANE)
+    save_path = os.path.join("plane%itraining/pid"%cfg.PLANE)
     ssf_path = saver.save(sess,save_path+'/'+cfg.ARCHITECTURE,global_step=i)
 
     #save_path = os.path.join("plane%itraining"%cfg.PLANE)

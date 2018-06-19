@@ -178,10 +178,10 @@ def main():
   # Override variables if wished
   reader=tf.train.Saver()
   
-  list_of_files = glob.glob('plane%straining/*'%(cfg.PLANE))
+  list_of_files = glob.glob('plane%straining/multiplicity/*'%(cfg.PLANE))
   latest_file = max(list_of_files, key=os.path.getctime)
   weight_file_path = latest_file.split(".")[0]
-  weight_file_name =  latest_file.split(".")[0].split("/")[1]
+  weight_file_name =  latest_file.split(".")[0].split("/")[2]
 
   print '========>>>>',weight_file_path
 
@@ -189,9 +189,9 @@ def main():
   # Analysis csv file
   #weight_file_name = cfg.LOAD_FILE.split('/')[-1]
   filler_file_name = cfg.FILLER_CONFIG.split('/')[-1].replace('.cfg','')
-  fout = open('test_csv/plane%s/%s.%s.csv' % (cfg.PLANE,weight_file_name,filler_file_name),'w')
+  fout = open('test_csv/plane%s/multiplicity/%s.%s.csv' % (cfg.PLANE,weight_file_name,filler_file_name),'w')
   print '===============>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
-  print 'test_csv/plane%s/%s.%s.csv' % (cfg.PLANE,weight_file_name,filler_file_name) 
+  print 'test_csv/plane%s/multiplicity/%s.%s.csv' % (cfg.PLANE,weight_file_name,filler_file_name) 
   fout.write('entry,label0,label1,label2,label3,label4')
   for idx in xrange(cfg.MULTIPLICITY_CLASS):
     idy=int(idx/5.)

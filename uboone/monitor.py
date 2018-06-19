@@ -7,17 +7,20 @@ plt.switch_backend('agg')
 from time import gmtime, strftime
 
 def make_plot(ax, plane):
+    
+    name=sys.argv[2]
 
-        
-    df_test  = pd.read_csv('/data/dayajun/toymodel/uboone/test_csv/plane%s/test_plane%s.csv'%(plane,plane))
-    df_train = pd.read_csv('/data/dayajun/toymodel/uboone/test_csv/plane%s/train_plane%s.csv'%(plane,plane))
+    df_test  = pd.read_csv('/data/dayajun/toymodel/uboone/test_csv/plane%s/%s/test_plane%s.csv'%(plane,name,plane))
+    df_train = pd.read_csv('/data/dayajun/toymodel/uboone/test_csv/plane%s/%s/train_plane%s.csv'%(plane,name,plane))
     
     t=strftime("%Y-%m-%d %H:%M:%S", gmtime())
 
-    ax.plot(df_train.iter.values, df_train.acc.values, '-*',color='blue', label='Train_sample Acc')
-    ax.plot(df_test.iter.values, df_test.acc.values, '-*',color='red' ,label='Test_sample Acc')
     ax1=ax.twinx()
     ax1.plot(df_train.iter.values, df_train.loss.values, '-*',color='orange', label='Train_sample Loss')
+
+    ax.plot(df_train.iter.values, df_train.acc.values, '-*',color='blue', label='Train_sample Acc')
+    ax.plot(df_test.iter.values, df_test.acc.values, '-*',color='red' ,label='Test_sample Acc')
+
 
     ax.set_ylabel('Accuracy')
     ax.set_xlabel('Step')
@@ -33,12 +36,14 @@ def make_plot(ax, plane):
 
 
 def main():
+
+    name=sys.argv[2]
     fig, ax = plt.subplots(1,1,figsize=(8,6))
 
-    plane=0
+    plane=2
 
-    F_test_file = os.path.isfile('/data/dayajun/toymodel/uboone/test_csv/plane%s/test_plane%s.csv'%(plane,plane))
-    F_train_file = os.path.isfile('/data/dayajun/toymodel/uboone/test_csv/plane%s/train_plane%s.csv'%(plane,plane))
+    F_test_file = os.path.isfile('/data/dayajun/toymodel/uboone/test_csv/plane%s/%s/test_plane%s.csv'%(plane,name,plane))
+    F_train_file = os.path.isfile('/data/dayajun/toymodel/uboone/test_csv/plane%s/%s/train_plane%s.csv'%(plane,name,plane))
     
     if (not F_test_file*F_train_file):
         ax.axis([0,10,0,10])
@@ -66,7 +71,8 @@ def main():
         print plane-1
         make_plot(ax, plane-1)
     '''
-    fig.savefig('Rui_monitor.png',bbox_inches="tight")
+
+    fig.savefig('Monitor_%s.png'%name,bbox_inches="tight")
 
     
 if __name__ == '__main__':

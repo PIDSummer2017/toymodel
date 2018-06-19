@@ -11,12 +11,13 @@ cfg=config()
 if not cfg.parse(sys.argv) or not cfg.sanity_check():
     print 'Need config file'
     sys.exit(1)
-list_of_files = glob.glob('test_csv/plane%s/*'%cfg.PLANE)
+list_of_files = glob.glob('test_csv/plane%s/multiplicity/*'%cfg.PLANE)
 latest_file = max(list_of_files, key=os.path.getctime)
-step = latest_file.split('/')[2].split('-')[1].split('.')[0]
+print latest_file
+step = latest_file.split('/')[3].split('-')[1].split('.')[0]
 
 print "latestfile, ", latest_file
-print "step",latest_file.split('/')[2].split('-')[1].split('.')[0]
+print "step",latest_file.split('/')[3].split('-')[1].split('.')[0]
 
 
 df=pd.read_csv(latest_file)
@@ -24,12 +25,12 @@ df=pd.read_csv(latest_file)
 df = df.drop_duplicates(subset=['entry'])
 
 ##Create csv file for one plane
-if not (os.path.isfile('test_csv/plane%s/test_plane%s.csv'%(cfg.PLANE,cfg.PLANE))):
-    fout = open('test_csv/plane%s/test_plane%s.csv' %(cfg.PLANE,cfg.PLANE),'w')
+if not (os.path.isfile('test_csv/plane%s/multiplicity/test_plane%s.csv'%(cfg.PLANE,cfg.PLANE))):
+    fout = open('test_csv/plane%s/multiplicity/test_plane%s.csv' %(cfg.PLANE,cfg.PLANE),'w')
     fout.write('iter,acc')
     fout.write('\n')
 else:
-    fout = open('test_csv/plane%s/test_plane%s.csv' %(cfg.PLANE,cfg.PLANE),'a')
+    fout = open('test_csv/plane%s/multiplicity/test_plane%s.csv' %(cfg.PLANE,cfg.PLANE),'a')
 
 #Calculate particle presence accu and multiplicity accu
 df_test = df
