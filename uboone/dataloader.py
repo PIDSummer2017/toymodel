@@ -26,12 +26,17 @@ class larcv_data (object):
       self._label_data = None
       self._label_data_size = None
       self._label_dim = None
+      self._multiplicity_data = None
+      self._multiplicity_data_size = None
+      self._multiplicity_dim = None
 
       self.time_data_read  = 0
       self.time_data_conv  = 0
       self.time_data_copy  = 0
       self.time_label_conv = 0
       self.time_label_copy = 0
+      self.time_multiplicity_conv = 0
+      self.time_multiplicity_copy = 0
       self.read_counter = 0
 
    def image_dim(self):
@@ -39,6 +44,9 @@ class larcv_data (object):
 
    def label_dim(self):
       return self._label_dim
+
+   def multiplicity_dim(self):
+      return self._multiplicity_dim
 
    def reset(self):
       if self.is_reading():
@@ -124,25 +132,39 @@ class larcv_data (object):
          print
          print 'Data size:',self._proc.data().size()
          print 'Label size:',self._proc.labels().size()
+         print 'Multiplicity size:',self._proc.multiplicities().size()
          print 'Batch size:',self._proc.processed_entries().size()
          print 'Total process counter:',self._proc.process_ctr()
 
       ctime = time.time()
       #np_data = larcv.as_ndarray(self._proc.data()).reshape(self._batch,self._proc.data().size()/self._batch)#.astype(np.float32)
       if self._image_data is None:
+
          self._image_data = np.array(self._proc.data())
          self._image_data_size = self._image_data.size
+
          self._label_data = np.array(self._proc.labels())
          self._label_data_size = self._label_data.size
+
+         self._multiplicity_data = np.array(self._proc.multiplicities())
+         self._multiplicity_data_size = self._multiplicity_data.size
+
          self._image_dim = np.array(self._proc.dim(True ))
          self._label_dim = np.array(self._proc.dim(False))
+         self._multiplicity_dim = np.array(self._proc.dim(False))
       else:
          self._image_data = self._image_data.reshape(self._image_data.size)
          larcv.copy_array(self._image_data,self._proc.data())
+
          self._label_data = self._label_data.reshape(self._label_data.size)
          larcv.copy_array(self._label_data,self._proc.labels())
+
+         self._multiplicity_data = self._multiplicity_data.reshape(self._multiplicity_data.size)
+         larcv.copy_array(self._multiplicity_data,self._proc.multiplicities())
+         
          self._image_dim[0] = self._batch
          self._label_dim[0] = self._batch
+         self._multiplicity_dim[0] = self._batch
 
       if self.read_counter: self.time_data_copy += time.time() - ctime
 
@@ -156,9 +178,14 @@ class larcv_data (object):
       self._label_data = self._label_data.reshape(self._batch,self._label_entry_data_size).astype(np.float32)
       if self.read_counter: self.time_label_conv += time.time() - ctime
 
+      ctime = time.time()
+      self._multiplicity_entry_data_size = self._proc.multiplicities().size() / self._batch
+      self._multiplicity_data = self._multiplicity_data.reshape(self._batch,self._multiplicity_entry_data_size).astype(np.float32)
+      if self.read_counter: self.time_multiplicity_conv += time.time() - ctime
+
       self._batch = -1
       self.read_counter += 1
-      return (self._image_data,self._label_data)
+      return (self._image_data,self._label_data, self._multiplicity_data)
 
 def sig_kill(signal,frame):
    print '\033[95mSIGINT detected.\033[00m Finishing the program gracefully.'

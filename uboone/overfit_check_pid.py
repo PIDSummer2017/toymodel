@@ -80,9 +80,9 @@ def main():
     sys.exit(1)
 
   os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-
+  os.environ["CUDA_VISIBLE_DEVICES"]="3"
   #os.environ["CUDA_VISIBLE_DEVICES"]=str(cfg.PLANE+2)
-  os.environ["CUDA_VISIBLE_DEVICES"]="0"
+  
   # Print configuration
   print '\033[95mConfiguration\033[00m'
   print cfg
@@ -162,10 +162,10 @@ def main():
   # Override variables if wished
   reader=tf.train.Saver()
   
-  list_of_files = glob.glob('plane%straining/*'%(cfg.PLANE))
+  list_of_files = glob.glob('plane%straining/pid/*'%(cfg.PLANE))
   latest_file = max(list_of_files, key=os.path.getctime)
   weight_file_path = latest_file.split(".")[0]
-  weight_file_name =  latest_file.split(".")[0].split("/")[1]
+  weight_file_name =  latest_file.split(".")[0].split("/")[2]
 
   print '========>>>>',weight_file_path
 
@@ -173,9 +173,9 @@ def main():
   # Analysis csv file
   #weight_file_name = cfg.LOAD_FILE.split('/')[-1]
   filler_file_name = cfg.FILLER_CONFIG.split('/')[-1].replace('.cfg','')
-  fout = open('test_csv/plane%s/%s.%s.csv' % (cfg.PLANE,weight_file_name,filler_file_name),'w')
+  fout = open('test_csv/plane%s/pid/%s.%s.csv' % (cfg.PLANE,weight_file_name,filler_file_name),'w')
   print '===============>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
-  print 'test_csv/plane%s/%s.%s.csv' % (cfg.PLANE,weight_file_name,filler_file_name) 
+  print 'test_csv/plane%s/pid/%s.%s.csv' % (cfg.PLANE,weight_file_name,filler_file_name) 
   fout.write('entry,label0,label1,label2,label3,label4')
   for idx in xrange(cfg.NUM_CLASS):
     fout.write(',score%02d' % idx)
@@ -195,7 +195,7 @@ def main():
     sys.stdout.write('Processing %d/%d\r' % (i,cfg.ITERATIONS))
     sys.stdout.flush()
     # Receive data (this will hang if IO thread is still running = this will wait for thread to finish & receive data)
-    data,label = proc.next()
+    data,label,multiplicity = proc.next()
     processed_entries = filler.processed_entries()
     for entry in xrange(processed_entries.size()):
       entry_number_v[entry] = processed_entries[entry]

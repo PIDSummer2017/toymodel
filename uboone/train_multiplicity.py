@@ -19,7 +19,7 @@ print cfg
 time.sleep(0.5)
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
-os.environ["CUDA_VISIBLE_DEVICES"]="2"
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
 
 
 # Import more libraries (after configuration is validated)
@@ -32,18 +32,17 @@ import numpy as np
 from dataloader import larcv_data
 
 # Create a csv file for online monitor
-if not (os.path.isfile('test_csv/plane%s/pid/train_plane%s.csv'%(cfg.PLANE,cfg.PLANE))):
+if not (os.path.isfile('test_csv/plane%s/multiplicity/train_plane%s.csv'%(cfg.PLANE,cfg.PLANE))):
   print 'Creating a new csv file for plane %s'%cfg.PLANE
-  fout = open('test_csv/plane%s/pid/train_plane%s.csv'%(cfg.PLANE,cfg.PLANE),'w')
+  fout = open('test_csv/plane%s/multiplicity/train_plane%s.csv'%(cfg.PLANE,cfg.PLANE),'w')
   fout.write('iter,acc,loss')
   fout.write('\n')
   fout.flush()
-
 else:
   print 'Found a csv file for plane %s'%cfg.PLANE
-  #fout = open('test_csv/plane%s/pid/train_plane%s.csv'%(cfg.PLANE,cfg.PLANE),'r+')
+  #fout = open('test_csv/plane%s/multiplicity/train_plane%s.csv'%(cfg.PLANE,cfg.PLANE),'r+')
   #lines = fout.read().split("\n")
-  fout = open('test_csv/plane%s/pid/train_plane%s.csv'%(cfg.PLANE,cfg.PLANE),'w')
+  fout = open('test_csv/plane%s/multiplicity/train_plane%s.csv'%(cfg.PLANE,cfg.PLANE),'w')
   '''
   word = str(start_iter)
   line_del = 0
@@ -92,6 +91,7 @@ proc.read_next(cfg.BATCH_SIZE)
 # Retrieve image/label dimensions
 image_dim = proc.image_dim()
 label_dim = proc.label_dim()
+multiplicity_dim = proc.multiplicity_dim()
 
 #
 # 1) Build network
@@ -100,9 +100,10 @@ label_dim = proc.label_dim()
 # Set input data and label for training
 #with tf.device('/gpu:%i'%cfg.GPU_INDEX):
 #keep_prob = tf.placeholder(tf.float32)
-data_tensor    = tf.placeholder(tf.float32, [None, image_dim[2] * image_dim[3]],name='x')
-label_tensor   = tf.placeholder(tf.float32, [None, cfg.NUM_CLASS],name='labels')
-data_tensor_2d = tf.reshape(data_tensor, [-1,image_dim[2],image_dim[3],1])
+data_tensor           = tf.placeholder(tf.float32, [None, image_dim[2] * image_dim[3]],name='x')
+label_tensor          = tf.placeholder(tf.float32, [None, cfg.NUM_CLASS],name='labels')
+multiplicity_tensor   = tf.placeholder(tf.float32, [None, cfg.MULTIPLICITY_CLASS],name='multiplicities')
+data_tensor_2d        = tf.reshape(data_tensor, [-1,image_dim[2],image_dim[3],1])
 tf.summary.image('input',data_tensor_2d,10)
 
 # Call network build function (then we add more train-specific layers)
@@ -122,14 +123,24 @@ for tensor in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES):
 with tf.name_scope('accuracy'):
   sigmoid = tf.nn.sigmoid(test_net)
   tf.summary.histogram('sigmoid', sigmoid)
-  correct_prediction = tf.equal(tf.rint(sigmoid), tf.rint(label_tensor))
-  accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+    
+  predicted_multi = tf.rint(sigmoid)
+  true_multi      = tf.rint(multiplicity_tensor)
+  correct_prediction      = tf.cast(tf.equal(predicted_multi, true_multi), tf.float32)
+  correct_prediction_norm = tf.multiply(correct_prediction, true_multi) 
+
+  numerator   = tf.reduce_sum(correct_prediction_norm)
+  denominator = tf.cast(tf.reduce_sum(true_multi), tf.float32)
+
+  accuracy = tf.divide(numerator, denominator)
   tf.summary.scalar('accuracy', accuracy)
   # Define loss + backprop as training step
 with tf.name_scope('train'):
 
   ##precision, pre_op = tf.metrics.precision(labels=label_tensor, predictions=train_net)
-  cross_entropy = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=label_tensor, logits=train_net))
+  true_multi      = multiplicity_tensor
+  cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=multiplicity_tensor, logits=train_net)
+  cross_entropy = tf.reduce_mean(cross_entropy)
   tf.summary.scalar('cross_entropy',cross_entropy)
   ##cross_entropy = tf.divide(tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=label_tensor, logits=train_net)), precision)
   train_step = tf.train.RMSPropOptimizer(0.0001).minimize(cross_entropy)  
@@ -177,7 +188,7 @@ for i in range(cfg.ITERATIONS):
   #tmp1 = tf.Print(sigmoid,      [sigmoid], "sigmoid")
   #tmp2 = tf.Print(label_tensor, [label_tensor], "true label")
   #loss,acc,_,print0,print1,print2 = sess.run([cross_entropy,accuracy,train_step,tmp0,tmp1,tmp2],feed_dict={data_tensor: data, label_tensor: label})
-  loss,acc,_= sess.run([cross_entropy,accuracy,train_step],feed_dict={data_tensor: data, label_tensor: label})
+  loss,acc,_= sess.run([cross_entropy,accuracy,train_step],feed_dict={data_tensor: data, multiplicity_tensor: multiplicity})
 
   sys.stdout.write('Training in progress @ step %d loss %g accuracy %g\r' % (i,loss,acc))
   sys.stdout.flush()
@@ -207,7 +218,7 @@ for i in range(cfg.ITERATIONS):
   # If configured to save summary + snapshot, do so here.
   if (i+1)%cfg.SAVE_ITERATION == 0:
     # Run summary
-    s = sess.run(merged_summary, feed_dict={data_tensor:data, label_tensor:label})
+    s = sess.run(merged_summary, feed_dict={data_tensor:data, multiplicity_tensor:multiplicity})
     writer.add_summary(s,i)
     # Save snapshot
     #ssf_path = saver.save(sess,cfg.ARCHITECTURE,global_step=i)
@@ -219,7 +230,7 @@ for i in range(cfg.ITERATIONS):
     fout.write('%d,%g,%g'%(i,acc,loss))
     fout.write('\n')
     fout.flush()
-    save_path = os.path.join("plane%itraining/pid"%cfg.PLANE)
+    save_path = os.path.join("plane%itraining/multiplicity"%cfg.PLANE)
     ssf_path = saver.save(sess,save_path+'/'+cfg.ARCHITECTURE,global_step=i)
 
     #save_path = os.path.join("plane%itraining"%cfg.PLANE)
@@ -233,7 +244,7 @@ fout.close()
 data,label,multiplicity = proc.next()
 proc.read_next(cfg.BATCH_SIZE)
 data,label,multiplicity = proc.next()
-print("Final test accuracy %g"%accuracy.eval(feed_dict={data_tensor: data, label_tensor: label}))
+print("Final test accuracy %g"%accuracy.eval(feed_dict={data_tensor: data, multiplicity_tensor: multiplicity}))
 
 # inform log directory
 print('Run `tensorboard --logdir=%s` in terminal to see the results.' % log_path)

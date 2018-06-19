@@ -6,6 +6,7 @@ class config:
     def __init__(self):
         self.DEBUG      = False
         self.NUM_CLASS  = 5
+        self.MULTIPLICITY_CLASS =25
         self.ITERATIONS = 1000
         self.BATCH_SIZE = 100
         self.SAVE_ITERATION = 100
@@ -33,6 +34,8 @@ class config:
             try:
                 if   argv.startswith('num_class='):
                     self.NUM_CLASS = int(argv.replace('num_class=',''))
+                elif argv.startswith('multiplicity_class='):
+                    self.MULTIPLICITY_CLASS = int(argv.replace('multiplicity_class=',''))
                 elif argv.startswith('batch='):
                     self.BATCH_SIZE = int(argv.replace('batch=',''))
                 elif argv.startswith('iterations='):
@@ -129,6 +132,7 @@ class config:
     def __str__(self):
         msg  = 'Configuration parameters:\n'
         msg += '    class count        = %d\n' % self.NUM_CLASS
+        msg += '    multiplicity size  = %d\n' % self.MULTIPLICITY_CLASS
         msg += '    batch size         = %d\n' % self.BATCH_SIZE
         msg += '    iterations         = %d\n' % self.ITERATIONS
         msg += '    log directory      = %s\n' % self.LOGDIR

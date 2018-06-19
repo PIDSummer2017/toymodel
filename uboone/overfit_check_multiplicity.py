@@ -1,11 +1,10 @@
 # Basic imports
-import os,sys,time
+import os,sys,time,glob
 from toytrain import config
 import numpy as np
 import tensorflow as tf
 
-#os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-#os.environ["CUDA_VISIBLE_DEVICES"]="3"
+ptypes=['eminus','gamma','muon','pion','proton']
 
 #
 # Utility functions
@@ -21,6 +20,11 @@ class truth_info:
     self.multi_neutron = 0
     self.multi_sum = 0
     self.multi_v = [0]*5
+    #self.eminus_multi=0
+    #self.gamma_multi=0
+    #self.muon_multi=0
+    #self.pion_multi=0
+    #self.proton_multi=0
     self.max_energy_v = [-1.]*5
     self.min_energy_v = [-1.]*5
     self.energy_sum = 0.
@@ -38,13 +42,24 @@ def get_truth_info(roi_chain,entry):
     roi = roi_v[idx]
     energy = roi.EnergyInit()
     index = -1
-    if   np.abs(roi.PdgCode()) == 11: index = 0
-    elif np.abs(roi.PdgCode()) == 22: index = 1
-    elif np.abs(roi.PdgCode()) == 13: index = 2
-    elif np.abs(roi.PdgCode()) == 211: index = 3
-    elif np.abs(roi.PdgCode()) == 2212: index = 4
+    if   np.abs(roi.PdgCode()) == 11: 
+      index = 0
+      #res.eminus_multi+=1
+    elif np.abs(roi.PdgCode()) == 22: 
+      index = 1
+      #res.gamma_multi+=1
+    elif np.abs(roi.PdgCode()) == 13: 
+      index = 2
+      #res.muon_multi+=1
+    elif np.abs(roi.PdgCode()) == 211: 
+      index = 3
+      #res.pion_multi+=1
+    elif np.abs(roi.PdgCode()) == 2212: 
+      index = 4
+      #res.proton_multi+=1
     res.multi_all +=1
     if np.abs(roi.PdgCode()) == 2112: res.multi_neutron += 1
+    
     if index<0: continue
 
     two_part_index.append(idx)
@@ -75,10 +90,15 @@ def get_truth_info(roi_chain,entry):
 def main():
 
   # Load configuration and check if it's good
+
   cfg = config()
   if not cfg.parse(sys.argv) or not cfg.sanity_check():
     sys.exit(1)
-  
+
+  os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+
+  #os.environ["CUDA_VISIBLE_DEVICES"]=str(cfg.PLANE+2)
+  os.environ["CUDA_VISIBLE_DEVICES"]="0"
   # Print configuration
   print '\033[95mConfiguration\033[00m'
   print cfg
@@ -157,14 +177,27 @@ def main():
   sess.run(tf.global_variables_initializer())
   # Override variables if wished
   reader=tf.train.Saver()
-  reader.restore(sess,cfg.LOAD_FILE)
+  
+  list_of_files = glob.glob('plane%straining/multiplicity/*'%(cfg.PLANE))
+  latest_file = max(list_of_files, key=os.path.getctime)
+  weight_file_path = latest_file.split(".")[0]
+  weight_file_name =  latest_file.split(".")[0].split("/")[2]
+
+  print '========>>>>',weight_file_path
+
+  reader.restore(sess,weight_file_path)
   # Analysis csv file
-  weight_file_name = cfg.LOAD_FILE.split('/')[-1]
+  #weight_file_name = cfg.LOAD_FILE.split('/')[-1]
   filler_file_name = cfg.FILLER_CONFIG.split('/')[-1].replace('.cfg','')
-  fout = open('%s.%s.csv' % (weight_file_name,filler_file_name),'w')
+  fout = open('test_csv/plane%s/multiplicity/%s.%s.csv' % (cfg.PLANE,weight_file_name,filler_file_name),'w')
+  print '===============>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
+  print 'test_csv/plane%s/multiplicity/%s.%s.csv' % (cfg.PLANE,weight_file_name,filler_file_name) 
   fout.write('entry,label0,label1,label2,label3,label4')
-  for idx in xrange(cfg.NUM_CLASS):
-    fout.write(',score%02d' % idx)
+  for idx in xrange(cfg.MULTIPLICITY_CLASS):
+    idy=int(idx/5.)
+    ptype=ptypes[idy]
+    mul=idx%5
+    fout.write(',%s_multi_%i' % (ptype,mul))
   for idx in xrange(cfg.NUM_CLASS):
     fout.write(',max_energy%02d' % idx)
   for idx in xrange(cfg.NUM_CLASS):
@@ -181,7 +214,7 @@ def main():
     sys.stdout.write('Processing %d/%d\r' % (i,cfg.ITERATIONS))
     sys.stdout.flush()
     # Receive data (this will hang if IO thread is still running = this will wait for thread to finish & receive data)
-    data,label = proc.next()
+    data,label,multiplicity = proc.next()
     processed_entries = filler.processed_entries()
     for entry in xrange(processed_entries.size()):
       entry_number_v[entry] = processed_entries[entry]
@@ -220,8 +253,9 @@ if __name__ == '__main__':
   from choose_gpu import pick_gpu
   GPUMEM=10000
   GPUID=pick_gpu(GPUMEM,caffe_gpuid=True)
+  print GPUID
   if GPUID < 0:
     sys.stderr.write('No available GPU with memory %d\n' % GPUMEM)
     sys.exit(1)
-  with tf.device('/gpu:%d' % GPUID):
-    main()
+    #with tf.device('/gpu:%d' % GPUID):
+  main()
