@@ -16,22 +16,29 @@ def make_plot(ax, plane):
     t=strftime("%Y-%m-%d %H:%M:%S", gmtime())
 
     ax1=ax.twinx()
-    ax1.plot(df_train.iter.values, df_train.loss.values, '-*',color='orange', label='Train_sample Loss')
 
-    ax.plot(df_train.iter.values, df_train.acc.values, '-*',color='blue', label='Train_sample Acc')
-    ax.plot(df_test.iter.values, df_test.acc.values, '-*',color='red' ,label='Test_sample Acc')
+    ax1.plot(df_train.iter.values, df_train.loss.values, '-*',color='orange', label='Train_sample Loss', zorder = 0 )
 
+    #ax1.set_zorder(0)
 
+    ax.plot(df_train.iter.values,  df_train.acc.values,  '-*',color='blue',   label='Train_sample Acc', zorder = 1)
+    ax.plot(df_test.iter.values,   df_test.acc.values,   '-*',color='red' ,   label='Test_sample Acc', lw=5, zorder = 1)
+    #ax.set_zorder(1)
+
+    ax1.set_ylabel('Loss')
+    ax1.set_ylim(0,1)
     ax.set_ylabel('Accuracy')
     ax.set_xlabel('Step')
-    ax1.set_ylabel('Loss')
+
 
     ax.grid()
 
     handles, labels = ax.get_legend_handles_labels()
     lgd = ax.legend(handles, labels, loc=2, bbox_to_anchor=(1.05, 1))
-    ax.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=20)
     ax1.legend(bbox_to_anchor=(1.05, 0.1), loc=2, borderaxespad=0., fontsize=20)
+    ax.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=20)
+    #ax.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,ncol=2, mode="expand", borderaxespad=0.)
+    
     ax.set_title("Traning Status %s"%t)
 
 

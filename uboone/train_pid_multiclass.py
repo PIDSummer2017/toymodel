@@ -177,8 +177,6 @@ for i in range(cfg.ITERATIONS):
   #tmp1 = tf.Print(sigmoid,      [sigmoid], "sigmoid")
   #tmp2 = tf.Print(label_tensor, [label_tensor], "true label")
   #loss,acc,_,print0,print1,print2 = sess.run([cross_entropy,accuracy,train_step,tmp0,tmp1,tmp2],feed_dict={data_tensor: data, label_tensor: label})
-  print data.shape
-  print label.shape
   loss,acc,_= sess.run([cross_entropy,accuracy,train_step],feed_dict={data_tensor: data, label_tensor: label})
 
   sys.stdout.write('Training in progress @ step %d loss %g accuracy %g\r' % (i,loss,acc))

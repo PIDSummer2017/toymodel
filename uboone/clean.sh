@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 
-rm test_csv/plane0/pid/*csv
-rm test_csv/plane1/pid/*csv
-rm test_csv/plane2/pid/*csv
+args=("$@")
 
-rm test_csv/plane0/multiplicity/*csv
-rm test_csv/plane1/multiplicity/*csv
-rm test_csv/plane2/multiplicity/*csv
+#echo Number of arguments: $#
+echo Removing csv and weight of: ${args[0]}
 
-rm plane2training/multiplicity/multiplicity-*
-rm plane2training/pid/pid*
+rm test_csv/plane0/${args[0]}/*csv
+rm test_csv/plane1/${args[0]}/*csv
+rm test_csv/plane2/${args[0]}/*csv
+
+rm plane2training/${args[0]}/${args[0]}*
+rm plane2training/${args[0]}/${args[0]}*
+
