@@ -43,7 +43,7 @@ else:
   print 'Found a csv file for plane %s'%cfg.PLANE
   #fout = open('test_csv/plane%s/pid/train_plane%s.csv'%(cfg.PLANE,cfg.PLANE),'r+')
   #lines = fout.read().split("\n")
-  fout = open('test_csv/plane%s/pid/train_plane%s.csv'%(cfg.PLANE,cfg.PLANE),'w')
+  fout = open('test_csv/plane%s/pid/train_plane%s.csv'%(cfg.PLANE,cfg.PLANE),'a')
   '''
   word = str(start_iter)
   line_del = 0
@@ -126,6 +126,7 @@ with tf.name_scope('accuracy'):
   accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
   tf.summary.scalar('accuracy', accuracy)
   # Define loss + backprop as training step
+
 with tf.name_scope('train'):
 
   ##precision, pre_op = tf.metrics.precision(labels=label_tensor, predictions=train_net)
