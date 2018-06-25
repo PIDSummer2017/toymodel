@@ -17,16 +17,16 @@ def make_plot(ax, plane):
 
     ax1=ax.twinx()
 
-    ax1.plot(df_train.iter.values, df_train.loss.values, '-*',color='orange', label='Train_sample Loss', zorder = 0 )
+    ln1 = ax1.plot(df_train.iter.values, df_train.loss.values, '-*',color='orange', label='Train_sample Loss', zorder = 0 )
 
     #ax1.set_zorder(0)
 
-    ax.plot(df_train.iter.values,  df_train.acc.values,  '-*',color='blue',   label='Train_sample Acc', zorder = 1)
-    ax.plot(df_test.iter.values,   df_test.acc.values,   '-*',color='red' ,   label='Test_sample Acc', lw=5, zorder = 1)
+    ln2 = ax.plot(df_train.iter.values,  df_train.acc.values,  '-*',color='blue',   label='Train_sample Acc', zorder = 1)
+    ln3 = ax.plot(df_test.iter.values,   df_test.acc.values,   '-*',color='red' ,   label='Test_sample Acc', lw=5, zorder = 1)
     #ax.set_zorder(1)
 
     ax1.set_ylabel('Loss')
-    ax1.set_ylim(0,1)
+    ax1.set_ylim(0,2)
     ax.set_ylabel('Accuracy')
     ax.set_xlabel('Step')
 
@@ -34,12 +34,13 @@ def make_plot(ax, plane):
     ax.grid()
 
     handles, labels = ax.get_legend_handles_labels()
-    lgd = ax.legend(handles, labels, loc=2, bbox_to_anchor=(1.05, 1))
-    ax1.legend(bbox_to_anchor=(1.05, 0.1), loc=2, borderaxespad=0., fontsize=20)
-    ax.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=20)
+    #lgd = ax.legend(handles, labels, loc=2, bbox_to_anchor=(1.05, 1))
+    lns = ln1+ln2+ln3
+    labs = [l.get_label() for l in lns]
+    ax.legend(lns, labs, bbox_to_anchor=(0., 1.02, 1., .102), loc=3,ncol=2, mode="expand", borderaxespad=0.)
     #ax.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,ncol=2, mode="expand", borderaxespad=0.)
-    
-    ax.set_title("Traning Status %s"%t)
+    #ax1.legend(bbox_to_anchor=(0., 1.09, 1., .102), loc=3,ncol=2, mode="expand", borderaxespad=0.)
+    #ax.set_title("%s Traning Status %s"%(name,t))
 
 
 def main():
