@@ -6,21 +6,22 @@ class config:
     def __init__(self):
         self.DEBUG      = False
         self.NUM_CLASS  = 5
-        self.MULTIPLICITY_CLASS =25
-        self.ITERATIONS = 1000
-        self.BATCH_SIZE = 100
+        self.MULTIPLICITY_CLASS = 25
+        self.ITERATIONS = 10
+        self.BATCH_SIZE = 5
         self.SAVE_ITERATION = 100
         self.LOGDIR         = 'logs'
-        self.ARCHITECTURE   = 'lenet'
-        self.LOAD_FILE      = '/data/drinkingkazu/summer2017/toymodel/train_multiclass2/pid-18199'
+        self.ARCHITECTURE   = 'multiplicity'
+        self.LOAD_FILE      = ''
         self.AVOID_LOAD_PARAMS = ''
-        self.FILLER_CONFIG = ''
-        self.TRAIN_FILLER_CONFIG = ''
-        self.TEST_FILLER_CONFIG = ''
+        self.FILLER_CONFIG = '/Users/ssfehlberg/Research/Summer_2018/wu/toymodel/uboone/multiclass_filler.cfg'
+        self.TRAIN_FILLER_CONFIG = '/Users/ssfehlberg/Research/Summer_2018/wu/toymodel/uboone/multiclass_filler.cfg'
+        self.TEST_FILLER_CONFIG = '/Users/ssfehlberg/Research/Summer_2018/wu/toymodel/uboone/multiclass_filler.cfg '
         self.GPU_INDEX = ''
-        self.PLANE = ''
+        self.PLANE = '2'
         self.LATEST_DIR=''
         self.LATEST_FILE=''
+
     def parse(self,argv_v):
 
         cfg_file=None

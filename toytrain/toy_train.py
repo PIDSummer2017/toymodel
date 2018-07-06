@@ -83,7 +83,7 @@ for i in range(cfg.ITERATIONS):
     
         print("step %d, training accuracy %g"%(i, train_accuracy))
 
-        save_path = saver.save(sess,cfg.ARCHITECTURE,global_step=i)
+        save_path = saver.save(sess,'/Users/ssfehlberg/Research/Summer_2018/wu/toymodel/toytrain/cfg.ARCHITECTURE',global_step=i)
         print 'saved @',save_path
 
     sess.run(train_step,feed_dict={data_tensor: batch[0], label_tensor: batch[1]})
