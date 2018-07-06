@@ -21,11 +21,11 @@ time.sleep(0.5)
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
 os.environ["CUDA_VISIBLE_DEVICES"]="1"
 
-
 # Import more libraries (after configuration is validated)
 import matplotlib
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+import logging
+logger = logging.getLogger('matplotlib')
 import numpy as np
 import tensorflow as tf
 import numpy as np
@@ -56,26 +56,26 @@ else:
       fout.write(lines[x])
       fout.write('\n')
   fout.truncate()
-  '''
+ '''
 
-#
+###################
 # Utility functions
-#
+###################
 # Integer rounder
 def time_round(num,digits):
   return float( int(num * np.power(10,digits)) / float(np.power(10,digits)) )
 
 #########################
-# main part starts here #
+# Main part starts here #
 #########################
 
-#
-# Step 0: configure IO
-#
+######################
+# Step 0: Configure IO
+######################
 
 # Instantiate and configure
 if not cfg.FILLER_CONFIG:
-  'Must provide larcv data filler configuration file!'
+  print 'Must provide larcv data filler configuration file!'
   sys.exit(1)
 proc = larcv_data()
 filler_cfg = {'filler_name': 'DataFiller', 
@@ -84,7 +84,7 @@ filler_cfg = {'filler_name': 'DataFiller',
 proc.configure(filler_cfg)
 # Spin IO thread first to read in a batch of image (this loads image dimension to the IO python interface)
 proc.read_next(cfg.BATCH_SIZE)
-# Force data to be read (calling next will sleep enough for the IO thread to finidh reading)
+# Force data to be read (calling next will sleep enough for the IO thread to finish reading)
 proc.next()
 # Immediately start the thread for later IO
 proc.read_next(cfg.BATCH_SIZE)
@@ -92,10 +92,11 @@ proc.read_next(cfg.BATCH_SIZE)
 image_dim = proc.image_dim()
 label_dim = proc.label_dim()
 multiplicity_dim = proc.multiplicity_dim()
+#print('multiplicity dim', multiplicity_dim)
 
-#
+##################
 # 1) Build network
-#
+#################
 
 # Set input data and label for training
 #with tf.device('/gpu:%i'%cfg.GPU_INDEX):
@@ -134,20 +135,23 @@ with tf.name_scope('accuracy'):
 
   accuracy = tf.divide(numerator, denominator)
   tf.summary.scalar('accuracy', accuracy)
+
 # Define loss + backprop as training step
 with tf.name_scope('train'):
 
   ##precision, pre_op = tf.metrics.precision(labels=label_tensor, predictions=train_net)
   true_multi      = multiplicity_tensor
   cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=multiplicity_tensor, logits=train_net)
-  cross_entropy = tf.reduce_mean(cross_entropy)
+  #cross_entropy = tf.reduce_mean(cross_entropy)
   tf.summary.scalar('cross_entropy',cross_entropy)
   ##cross_entropy = tf.divide(tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=label_tensor, logits=train_net)), precision)
   train_step = tf.train.RMSPropOptimizer(0.0001).minimize(cross_entropy)  
   #train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)  
-  #
+  
+  #####################################################
   # 2) Configure global process (session, summary, etc.)
-  #
+  #####################################################
+
   # Create a bandle of summary
 merged_summary=tf.summary.merge_all()
 # Create a session
@@ -175,12 +179,19 @@ if cfg.LOAD_FILE:
   reader=tf.train.Saver(var_list=vlist)
   reader.restore(sess,cfg.LOAD_FILE)
   
-# Run training loop
+######################
+# 3) Run training loop
+######################
+
 for i in range(cfg.ITERATIONS):
   i=i+start_iter
   # Receive data (this will hang if IO thread is still running = this will wait for thread to finish & receive data)
-  data,label,multiplicity = proc.next()
-  # Start IO thread for the next batch while we train the network
+  #print 'data', data_tensor
+  #print 'label', label_tensor
+  #print 'multiplicity',multiplicity_tensor
+  #print 'length of proc.next', len(proc.next())
+  data, label, multiplicity = proc.next() 
+# Start IO thread for the next batch while we train the network
   proc.read_next(cfg.BATCH_SIZE)
   # Run loss & train step
 
@@ -240,11 +251,11 @@ for i in range(cfg.ITERATIONS):
 
 fout.close()
 
-# post training test
+# Post Training Test
 data,label,multiplicity = proc.next()
 proc.read_next(cfg.BATCH_SIZE)
 data,label,multiplicity = proc.next()
 print("Final test accuracy %g"%accuracy.eval(feed_dict={data_tensor: data, multiplicity_tensor: multiplicity}))
 
-# inform log directory
+# Inform Log Directory
 print('Run `tensorboard --logdir=%s` in terminal to see the results.' % log_path)

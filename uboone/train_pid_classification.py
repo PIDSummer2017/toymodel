@@ -16,22 +16,28 @@ time.sleep(0.5)
 # Import more libraries (after configuration is validated)
 import matplotlib
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
+import logging
+logger = logging.getLogger('matplotlib')
+
 import numpy as np
 import tensorflow as tf
 import numpy as np
 from dataloader import larcv_data
 
-#
+####################
 # Utility functions
-#
+####################
+
 # Integer rounder
 def time_round(num,digits):
   return float( int(num * np.power(10,digits)) / float(np.power(10,digits)) )
+
 # Classification label conversion
 def convert_label(input_label,num_class):
   result_label = np.zeros((len(input_label),num_class))
   for idx,label in enumerate(input_label):
+    #print 'result label' ,result_label[int(label)]
     result_label[idx][int(label)]=1.
   return result_label
 
@@ -39,13 +45,13 @@ def convert_label(input_label,num_class):
 # main part starts here #
 #########################
 
-#
-# Step 0: configure IO
-#
+######################
+# 0) Configure IO
+######################
 
 # Instantiate and configure
 if not cfg.FILLER_CONFIG:
-  'Must provide larcv data filler configuration file!'
+  print 'Must provide larcv data filler configuration file!'
   sys.exit(1)
 proc = larcv_data()
 filler_cfg = {'filler_name': 'DataFiller', 
@@ -62,49 +68,55 @@ proc.read_next(cfg.BATCH_SIZE)
 image_dim = proc.image_dim()
 label_dim = proc.label_dim()
 
-#
+##################
 # 1) Build network
-#
+#################
 
 # Set input data and label for training
-with tf.device('/gpu:%i'%cfg.GPU_INDEX):
-  data_tensor    = tf.placeholder(tf.float32, [None, image_dim[2] * image_dim[3]],name='x')
-  label_tensor   = tf.placeholder(tf.float32, [None, cfg.NUM_CLASS],name='labels')
-  data_tensor_2d = tf.reshape(data_tensor, [-1,image_dim[2],image_dim[3],1])
-  tf.summary.image('input',data_tensor_2d,10)
+#with tf.device('/gpu:%i'%cfg.GPU_INDEX):
+data_tensor    = tf.placeholder(tf.float32, [None, image_dim[2] * image_dim[3]],name='x')
+label_tensor   = tf.placeholder(tf.float32, [None, cfg.NUM_CLASS],name='labels')
+data_tensor_2d = tf.reshape(data_tensor, [-1,image_dim[2],image_dim[3],1])
+tf.summary.image('input',data_tensor_2d,10)
 
   # Call network build function (then we add more train-specific layers)
-  net = None
-  cmd = 'from toynet import toy_%s;net=toy_%s.build(data_tensor_2d,cfg.NUM_CLASS)' % (cfg.ARCHITECTURE,cfg.ARCHITECTURE)
-  exec(cmd)
+net = None
+cmd = 'from toynet import toy_%s;net=toy_%s.build(data_tensor_2d,cfg.NUM_CLASS)' % (cfg.ARCHITECTURE,cfg.ARCHITECTURE)
+exec(cmd)
 
   # Define accuracy
-  with tf.name_scope('accuracy'):
-    correct_prediction = tf.equal(tf.argmax(net,1), tf.argmax(label_tensor,1))
-    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-    tf.summary.scalar('accuracy', accuracy)
+with tf.name_scope('accuracy'):
+  correct_prediction = tf.equal(tf.argmax(net,1), tf.argmax(label_tensor,1))
+  accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+  tf.summary.scalar('accuracy', accuracy)
 
     # Define loss + backprop as training step
-  with tf.name_scope('train'):
-    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=label_tensor, logits=net))
-    tf.summary.scalar('cross_entropy',cross_entropy)
-    train_step = tf.train.RMSPropOptimizer(0.0003).minimize(cross_entropy)  
+with tf.name_scope('train'):
+  cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=label_tensor, logits=net))
+  tf.summary.scalar('cross_entropy',cross_entropy)
+  train_step = tf.train.RMSPropOptimizer(0.0003).minimize(cross_entropy)  
 
-  #
-  # 2) Configure global process (session, summary, etc.)
-  #
-  # Create a bandle of summary
+#####################################################
+# 2) Configure global process (session, summary, etc.)
+######################################################
+
+# Create a bandle of summary
   merged_summary=tf.summary.merge_all()
+
 # Create a session
-#sess = tf.InteractiveSession()
-sess = tf.InteractiveSession(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True))
+sess = tf.InteractiveSession()
+#sess = tf.InteractiveSession(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True))
+
 # Initialize variables
 sess.run(tf.global_variables_initializer())
+
 # Create a summary writer handle
 writer=tf.summary.FileWriter(cfg.LOGDIR)
 writer.add_graph(sess.graph)
+
 # Create weights saver
 saver = tf.train.Saver()
+print 'you are a lovely person'
 # Override variables if wished
 if cfg.LOAD_FILE:
   print 'cfg.LOAD_FILE', cfg.LOAD_FILE
@@ -119,15 +131,17 @@ if cfg.LOAD_FILE:
   reader=tf.train.Saver(var_list=vlist)
   reader.restore(sess,cfg.LOAD_FILE)
   
+print 'just thought you should know'
 # Run training loop
 for i in range(cfg.ITERATIONS):
 
   # Receive data (this will hang if IO thread is still running = this will wait for thread to finish & receive data)
   data,label = proc.next()
+
   # Start IO thread for the next batch while we train the network
   proc.read_next(cfg.BATCH_SIZE)
   # Use utility function to convert the shape of the label for classification
-  label = convert_label(label,cfg.NUM_CLASS)
+  #label = convert_label(label,cfg.NUM_CLASS)
   # Run loss & train step
   loss,acc,_ = sess.run([cross_entropy,accuracy,train_step],feed_dict={data_tensor: data, label_tensor: label})
 
@@ -159,9 +173,11 @@ for i in range(cfg.ITERATIONS):
 
   # If configured to save summary + snapshot, do so here.
   if (i+1)%cfg.SAVE_ITERATION == 0:
+    
     # Run summary
     s = sess.run(merged_summary, feed_dict={data_tensor:data, label_tensor:label})
     writer.add_summary(s,i)
+    
     # Save snapshot
     #ssf_path = saver.save(sess,cfg.ARCHITECTURE,global_step=i)
     ssf_path = saver.save(sess,cfg.ARCHITECTURE,global_step=epoch_number)

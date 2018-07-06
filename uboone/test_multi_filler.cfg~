@@ -2,8 +2,10 @@ DataFiller: {
 
   Verbosity:    2
   EnableFilter: false
-  RandomAccess: false
-  InputFiles: ["/Users/ssfehlberg/Research/Summer_2018/wu/toymodel/test_1mu1p_lowE_00.root"]
+  RandomAccess: true
+  #InputFiles: ["/stage2/drinkingkazu/dl_production_v02/dlmc_mcc8_ssnet/process2/test_1e1p_lowE.root"]
+  #InputFiles: ["/data/dayajun/toymodel/uboone/train_data/train_00_test.root"]
+  InputFiles: ["/Users/ssfehlberg/Research//val.root"]
   ProcessType:  ["ADCThreshold","MultiClassFiller"]
   ProcessName:  ["ADCThres","MultiClassFiller"]
 
@@ -19,12 +21,14 @@ DataFiller: {
       Verbosity: 2
       ImageProducer:     "wire"
       LabelProducer:     "segment"
+      MultiplicityProducer: "segment"
 
       # MultiClassFiller configuration
       ClassTypeDef:      [0,0,0,3,4,4,6,8,8,9]
       ClassTypeList:     [3,4,6,8,9]
       Channels:          [2]
       EnableMirror:      true
+      EnableTranspose:   true
     }
   }
 }
