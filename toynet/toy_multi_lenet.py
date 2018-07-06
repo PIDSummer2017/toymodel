@@ -22,10 +22,10 @@ def build(input_tensor, num_class=5):
         vals.append(z)
         i += 1
     return vals
-    print vals
+    #print vals
 
 # script unit test
 if __name__ == '__main__':
     x = tf.placeholder(tf.float32, [50,28,28,1])
     net = build(x)
-    print(np.shape(net[0]))
+    #print(np.shape(net[0]))
