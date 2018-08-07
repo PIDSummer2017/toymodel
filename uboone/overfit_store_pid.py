@@ -76,8 +76,8 @@ df_m2['presence4']=df_m2.apply(lambda row: get_presence(row,4), axis=1)
 
 def reduce_mean(row):
     labels=np.array([row.label0,row.label1,row.label2,row.label3,row.label4])
-    preds=np.array([row.pred0, row.pred1, row.pred2, row.pred3, row.pred4])
-    equal=np.equal(labels, preds)
+    preds =np.array([row.pred0, row.pred1, row.pred2, row.pred3, row.pred4])
+    equal =np.equal(labels, preds)
     reduce_mean=np.mean(equal)
     return  reduce_mean
 

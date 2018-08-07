@@ -44,11 +44,12 @@ def make_plot(ax, plane):
 
 
 def main():
-
+    
     name=sys.argv[2]
+    '''
     fig, ax = plt.subplots(1,1,figsize=(8,6))
 
-    plane=2
+    plane=0
 
     F_test_file = os.path.isfile('/data/dayajun/toymodel/uboone/test_csv/plane%s/%s/test_plane%s.csv'%(plane,name,plane))
     F_train_file = os.path.isfile('/data/dayajun/toymodel/uboone/test_csv/plane%s/%s/train_plane%s.csv'%(plane,name,plane))
@@ -62,13 +63,21 @@ def main():
     make_plot(ax, plane)
 
     '''
-    fig, (ax_1,ax_2,ax_3) = plt.subplots(3,1,figsize=(10,24))
+    #fig, (ax_1,ax_2,ax_3) = plt.subplots(3,1,figsize=(10,24))
+    fig_1, ax_1 = plt.subplots(1,1,figsize=(8,6))
+    fig_2, ax_2 = plt.subplots(1,1,figsize=(8,6))
+    fig_3, ax_3 = plt.subplots(1,1,figsize=(8,6))
+    figs=[fig_1,fig_2,fig_3]
+
     axes=[ax_1,ax_2,ax_3]
+
     plane=0
     for ax in axes:
-        F_test_file = os.path.isfile('/data/dayajun/toymodel/uboone/test_csv/plane%s/test_plane%s.csv'%(plane,plane))
-        F_train_file = os.path.isfile('/data/dayajun/toymodel/uboone/test_csv/plane%s/train_plane%s.csv'%(plane,plane))
-        plane+=1
+        #F_test_file = os.path.isfile('/data/dayajun/toymodel/uboone/test_csv/plane%s/test_plane%s.csv'%(plane,plane))
+        #F_train_file = os.path.isfile('/data/dayajun/toymodel/uboone/test_csv/plane%s/train_plane%s.csv'%(plane,plane))
+        F_test_file = os.path.isfile('/data/dayajun/toymodel/uboone/test_csv/plane%s/%s/test_plane%s.csv'%(plane,name,plane))
+        F_train_file = os.path.isfile('/data/dayajun/toymodel/uboone/test_csv/plane%s/%s/train_plane%s.csv'%(plane,name,plane))
+        
         if (not F_test_file*F_train_file):
             ax.axis([0,10,0,10])
 
@@ -76,12 +85,13 @@ def main():
             if (not F_train_file): ax.text(2,7,'No training csv',fontsize=30)
 
             continue
-        print plane-1
-        make_plot(ax, plane-1)
-    '''
 
-    fig.savefig('Monitor_%s.png'%name,bbox_inches="tight")
+        make_plot(ax, plane)
 
+
+        figs[plane].savefig('Monitor_%s_%i.png'%(name,plane),bbox_inches="tight")
+        plane+=1
+        
     
 if __name__ == '__main__':
     main()
