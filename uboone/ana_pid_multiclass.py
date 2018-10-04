@@ -4,8 +4,8 @@ from toytrain import config
 import numpy as np
 import tensorflow as tf
 
-#os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-#os.environ["CUDA_VISIBLE_DEVICES"]="3"
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"]="3"
 
 #
 # Utility functions
@@ -181,7 +181,7 @@ def main():
     sys.stdout.write('Processing %d/%d\r' % (i,cfg.ITERATIONS))
     sys.stdout.flush()
     # Receive data (this will hang if IO thread is still running = this will wait for thread to finish & receive data)
-    data,label = proc.next()
+    data,label,multiplicity = proc.next()
     processed_entries = filler.processed_entries()
     for entry in xrange(processed_entries.size()):
       entry_number_v[entry] = processed_entries[entry]
