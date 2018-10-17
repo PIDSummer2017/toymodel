@@ -216,12 +216,12 @@ def main():
   print
   print 'Done'
 
-if __name__ == '__main__':
-  from choose_gpu import pick_gpu
-  GPUMEM=10000
-  GPUID=pick_gpu(GPUMEM,caffe_gpuid=True)
-  if GPUID < 0:
-    sys.stderr.write('No available GPU with memory %d\n' % GPUMEM)
-    sys.exit(1)
-  with tf.device('/gpu:%d' % GPUID):
-    main()
+#if __name__ == '__main__':
+#  from choose_gpu import pick_gpu
+#  GPUMEM=10000
+#  GPUID=pick_gpu(GPUMEM,caffe_gpuid=True)
+#  if GPUID < 0:
+#    sys.stderr.write('No available GPU with memory %d\n' % GPUMEM)
+#    sys.exit(1)
+#  with tf.device('/gpu:%d' % GPUID):
+#    main()

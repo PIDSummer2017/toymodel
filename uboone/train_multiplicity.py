@@ -78,6 +78,7 @@ if not cfg.FILLER_CONFIG:
   print 'Must provide larcv data filler configuration file!'
   sys.exit(1)
 proc = larcv_data()
+#print 'proc', proc.multiplici()
 filler_cfg = {'filler_name': 'DataFiller', 
               'verbosity':0, 
               'filler_cfg':cfg.FILLER_CONFIG}
@@ -92,7 +93,7 @@ proc.read_next(cfg.BATCH_SIZE)
 image_dim = proc.image_dim()
 label_dim = proc.label_dim()
 multiplicity_dim = proc.multiplicity_dim()
-#print('multiplicity dim', multiplicity_dim)
+print('multiplicity dim', multiplicity_dim)
 
 ##################
 # 1) Build network
@@ -105,7 +106,8 @@ data_tensor           = tf.placeholder(tf.float32, [None, image_dim[2] * image_d
 label_tensor          = tf.placeholder(tf.float32, [None, cfg.NUM_CLASS],name='labels')
 multiplicity_tensor   = tf.placeholder(tf.float32, [None, cfg.MULTIPLICITY_CLASS],name='multiplicities')
 data_tensor_2d        = tf.reshape(data_tensor, [-1,image_dim[2],image_dim[3],1])
-tf.summary.image('input',data_tensor_2d,10)
+#tf.summary.image('input',data_tensor)
+tf.summary.image('input_2d',data_tensor_2d,10)
 
 # Call network build function (then we add more train-specific layers)
 train_net = None
@@ -138,11 +140,10 @@ with tf.name_scope('accuracy'):
 
 # Define loss + backprop as training step
 with tf.name_scope('train'):
-
   ##precision, pre_op = tf.metrics.precision(labels=label_tensor, predictions=train_net)
   true_multi      = multiplicity_tensor
   cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=multiplicity_tensor, logits=train_net)
-  #cross_entropy = tf.reduce_mean(cross_entropy)
+  cross_entropy = tf.reduce_mean(cross_entropy)
   tf.summary.scalar('cross_entropy',cross_entropy)
   ##cross_entropy = tf.divide(tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=label_tensor, logits=train_net)), precision)
   train_step = tf.train.RMSPropOptimizer(0.0001).minimize(cross_entropy)  
@@ -194,14 +195,15 @@ for i in range(cfg.ITERATIONS):
 # Start IO thread for the next batch while we train the network
   proc.read_next(cfg.BATCH_SIZE)
   # Run loss & train step
-
-  #tmp0 = tf.Print(test_net,     [test_net], "test_net")
-  #tmp1 = tf.Print(sigmoid,      [sigmoid], "sigmoid")
-  #tmp2 = tf.Print(label_tensor, [label_tensor], "true label")
-  #loss,acc,_,print0,print1,print2 = sess.run([cross_entropy,accuracy,train_step,tmp0,tmp1,tmp2],feed_dict={data_tensor: data, label_tensor: label})
+#  tmp0 = tf.Print(test_net,     [test_net], "test_net")
+#  tmp1 = tf.Print(sigmoid,      [sigmoid], "sigmoid")
+#  tmp2 = tf.Print(label_tensor, [label_tensor], "true label")
+#  loss,acc,_,print0,print1,print2 = sess.run([cross_entropy,accuracy,train_step,tmp0,tmp1,tmp2],feed_dict={data_tensor: data, label_tensor: label, multiplicity_tensor: multiplicity})
+ 
+ #THIS IS THE CORRECT ONE!
   loss,acc,_= sess.run([cross_entropy,accuracy,train_step],feed_dict={data_tensor: data, multiplicity_tensor: multiplicity})
-
-  sys.stdout.write('Training in progress @ step %d loss %g accuracy %g\r' % (i,loss,acc))
+# There is a problem printing out the loss since it is prinitng 5, 1x5 arrays (one for each of the particle classes) ASK RUI ABOUT THIS TOMORROW
+  sys.stdout.write('Training in progress @ step %d loss %g accuracy %g\r' % (i,np.sum(loss),acc))
   sys.stdout.flush()
 
   # Debug mode will dump images
@@ -230,6 +232,7 @@ for i in range(cfg.ITERATIONS):
   if (i+1)%cfg.SAVE_ITERATION == 0:
     # Run summary
     s = sess.run(merged_summary, feed_dict={data_tensor:data, multiplicity_tensor:multiplicity})
+    #s = sess.run(merged_summary, feed_dict={data_tensor:data, label_tensor:label})
     writer.add_summary(s,i)
     # Save snapshot
     #ssf_path = saver.save(sess,cfg.ARCHITECTURE,global_step=i)
@@ -238,10 +241,10 @@ for i in range(cfg.ITERATIONS):
     print 'loss is ',loss
     print 'acc is ',acc
     print fout
-    fout.write('%d,%g,%g'%(i,acc,loss))
+    fout.write('%d,%g,%g'%(i,acc,np.sum(loss)))
     fout.write('\n')
     fout.flush()
-    save_path = os.path.join("plane%itraining/multiplicity"%cfg.PLANE)
+    save_path = os.path.join("plane%straining/multiplicity"%cfg.PLANE)
     ssf_path = saver.save(sess,save_path+'/'+cfg.ARCHITECTURE,global_step=i)
 
     #save_path = os.path.join("plane%itraining"%cfg.PLANE)
@@ -258,4 +261,4 @@ data,label,multiplicity = proc.next()
 print("Final test accuracy %g"%accuracy.eval(feed_dict={data_tensor: data, multiplicity_tensor: multiplicity}))
 
 # Inform Log Directory
-print('Run `tensorboard --logdir=%s` in terminal to see the results.' % log_path)
+print('Run `tensorboard --logdir=%s --host=127.0.0.1` in terminal to see the results.' % log_path)

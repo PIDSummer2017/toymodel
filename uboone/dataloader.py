@@ -146,12 +146,12 @@ class larcv_data (object):
          self._label_data = np.array(self._proc.labels())
          self._label_data_size = self._label_data.size
 
-         #self._multiplicity_data = np.array(self._proc.multiplicities())
-         #self._multiplicity_data_size = self._multiplicity_data.size
+         self._multiplicity_data = np.array(self._proc.multiplicities())
+         self._multiplicity_data_size = self._multiplicity_data.size
 
          self._image_dim = np.array(self._proc.dim(True ))
          self._label_dim = np.array(self._proc.dim(False))
-         #self._multiplicity_dim = np.array(self._proc.dim(False))
+         self._multiplicity_dim = np.array(self._proc.dim(False))
       else:
          self._image_data = self._image_data.reshape(self._image_data.size)
          larcv.copy_array(self._image_data,self._proc.data())
@@ -159,12 +159,12 @@ class larcv_data (object):
          self._label_data = self._label_data.reshape(self._label_data.size)
          larcv.copy_array(self._label_data,self._proc.labels())
 
-#         self._multiplicity_data = self._multiplicity_data.reshape(self._multiplicity_data.size)
-#         larcv.copy_array(self._multiplicity_data,self._proc.multiplicities())
+         self._multiplicity_data = self._multiplicity_data.reshape(self._multiplicity_data.size)
+         larcv.copy_array(self._multiplicity_data,self._proc.multiplicities())
          
          self._image_dim[0] = self._batch
          self._label_dim[0] = self._batch
-#         self._multiplicity_dim[0] = self._batch
+         self._multiplicity_dim[0] = self._batch
 
       if self.read_counter: self.time_data_copy += time.time() - ctime
 
@@ -179,13 +179,13 @@ class larcv_data (object):
       if self.read_counter: self.time_label_conv += time.time() - ctime
 
       ctime = time.time()
- #     self._multiplicity_entry_data_size = self._proc.multiplicities().size() / self._batch
- #     self._multiplicity_data = self._multiplicity_data.reshape(self._batch,self._multiplicity_entry_data_size).astype(np.float32)
- #     if self.read_counter: self.time_multiplicity_conv += time.time() - ctime
+      self._multiplicity_entry_data_size = self._proc.multiplicities().size() / self._batch
+      self._multiplicity_data = self._multiplicity_data.reshape(self._batch,self._multiplicity_entry_data_size).astype(np.float32)
+      if self.read_counter: self.time_multiplicity_conv += time.time() - ctime
 
       self._batch = -1
       self.read_counter += 1
-      return (self._image_data,self._label_data)#, self._multiplicity_data)
+      return (self._image_data,self._label_data, self._multiplicity_data)
 
 def sig_kill(signal,frame):
    print '\033[95mSIGINT detected.\033[00m Finishing the program gracefully.'
